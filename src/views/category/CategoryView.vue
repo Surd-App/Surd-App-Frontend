@@ -103,22 +103,6 @@ watch([categoryData, () => route.query.target], () => {
       <n-space vertical size="large">
         <!-- 移动端布局 -->
         <template v-if="isMobile">
-          <n-flex vertical :size="4" style="padding: 0 4px;" align="start">
-            <n-flex align="center" :size="8">
-              <n-icon size="24" color="var(--n-primary-color)">
-                <Book24Regular />
-              </n-icon>
-              <n-gradient-text type="primary" :size="24" weight="bold">
-                {{ categoryData.name }}
-              </n-gradient-text>
-            </n-flex>
-            <n-text depth="3" style="font-size: 13px;">
-              共 {{ categoryData.total_question_count }} 道题目 · 已完成 {{ categoryData.total_completed_count }}
-            </n-text>
-          </n-flex>
-
-          <n-divider style="margin: 8px 0;" />
-
           <n-space vertical :size="18">
             <n-card 
               v-for="level2 in categoryData.children" 
@@ -277,22 +261,6 @@ watch([categoryData, () => route.query.target], () => {
 
         <!-- 桌面端布局 -->
         <template v-else>
-          <n-flex align="center" justify="space-between">
-            <n-flex align="center">
-              <n-icon size="32" color="var(--n-primary-color)">
-                <Book24Regular />
-              </n-icon>
-              <n-gradient-text type="primary" :size="28" weight="bold">
-                {{ categoryData.name }}
-              </n-gradient-text>
-            </n-flex>
-            <n-text depth="3">
-              共 {{ categoryData.total_question_count }} 道题目 · 已完成 {{ categoryData.total_completed_count }}
-            </n-text>
-          </n-flex>
-
-          <n-divider />
-
           <n-space vertical :size="26">
             <n-card 
               v-for="level2 in categoryData.children" 

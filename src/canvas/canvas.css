@@ -1,0 +1,110 @@
+.question-canvas-page {
+  position: absolute;
+  inset: -24px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.question-canvas-host {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+.question-canvas-host .tl-container { background: transparent; }
+.question-canvas-host .tl-background { background: transparent; }
+.question-canvas-host .tlui-layout { pointer-events: none; }
+.question-canvas-host .tlui-toolbar,
+.question-canvas-host .tlui-navigation-zone,
+.question-canvas-host .tlui-help-menu,
+.question-canvas-host .tlui-menu-zone { display: none !important; }
+.qc-group {
+  border: var(--qc-line-width, 1px) solid var(--qc-border);
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  pointer-events: auto;
+}
+.qc-group header {
+  position: relative; height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 20px;
+  color: var(--qc-text); font-size: 16px;
+}
+.qc-group header strong { color: var(--qc-text); }
+.qc-primary header { font-size: 19px; }
+.qc-primary header span { font-size: 11px; }
+.qc-group header span:nth-child(2) { margin-left: auto; color: var(--qc-muted); font-size: 12px; }
+.qc-group header span:last-child { font-size: 22px; color: var(--qc-text); line-height: 1; }
+.qc-card {
+  display: flex; flex-direction: column; overflow: visible; border: var(--qc-line-width, 1px) solid var(--qc-border);
+  border-radius: 12px; background: var(--qc-card-background); color: var(--qc-text);
+  box-shadow: none;
+  pointer-events: auto;
+  /* Isolate layout work without clipping formulas or promoting every card to a GPU layer. */
+  contain: layout style;
+  transition: none;
+  animation: none;
+}
+.qc-card header { display: flex; gap: 6px; align-items: center; padding: 8px 10px; border-bottom: var(--qc-line-width, 1px) solid var(--qc-divider); font-size: 12px; }
+.qc-card header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--qc-muted); font-size: 9px; }
+.qc-card footer { margin-top: auto; padding: 7px 10px; color: var(--qc-muted); font-size: 9px; border-top: 1px solid var(--qc-divider); }
+.qc-content, .qc-preview { padding: 10px 12px; overflow: visible; line-height: 1.9; font-size: 11px !important; }
+.qc-content .latex-render-content { font-size: 11px !important; line-height: 1.9 !important; letter-spacing: normal; word-spacing: normal; }
+.qc-content .latex-render-content .katex { font-size: 1em !important; }
+.qc-content .latex-render-content .katex-display { margin: 0.75em 0 !important; line-height: 1.25; }
+.question-canvas-host { position: relative; height: 100%; min-height: 0; touch-action: none; }
+.question-canvas-page .question-canvas-host {
+  flex: 1 1 auto;
+  width: 100%;
+  height: calc(100vh - 220px) !important;
+  min-height: 520px;
+}
+.question-canvas-host .tl-background { background: var(--canvas-background); }
+.question-canvas-page > .n-spin-container,
+.question-canvas-page > .n-spin-container > .n-spin-content {
+  flex: 1 1 auto;
+  min-height: 520px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.question-canvas-page > .n-spin-container { display: flex; flex: 1 1 auto; min-height: 520px; }
+.question-canvas-measure { position: fixed; left: -100000px; top: 0; width: 330px; visibility: hidden; pointer-events: none; }
+.question-canvas-measure-card { width: 330px; padding: 12px 14px; box-sizing: border-box; }
+.qc-card, .qc-group { box-sizing: border-box; }
+.qc-group header strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.qc-content { flex: none; min-height: 0; height: auto; }
+
+.qc-card .qc-content { overflow: visible; }
+.qc-card header, .qc-card footer { flex-shrink: 0; }
+.qc-content .katex-display { overflow: visible; }
+.qc-content img { max-width: 100%; height: auto; }
+.qc-content pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.qc-content { overflow-wrap: anywhere; }
+
+/* Two states: compact numbered cards or complete card contents. */
+.question-canvas-host .qc-group { border-width: var(--qc-line-width, 1px); }
+.question-canvas-host[data-qc-detail='compact'] .qc-content { display: none; }
+.question-canvas-host[data-qc-detail='compact'] .qc-card { border-color: var(--qc-border); background: var(--qc-card-background); }
+.question-canvas-host[data-qc-detail='compact'] .qc-card header { flex: 1; min-height: 0; justify-content: center; text-align: center; padding: 0; font-size: 15px; border-bottom: none; }
+.question-canvas-host[data-qc-detail='compact'] .qc-card header span { display: none; }
+.question-canvas-host[data-qc-detail='outline'] .qc-card header,
+.question-canvas-host[data-qc-detail='outline'] .qc-group header {
+  color: transparent;
+  font-size: 0;
+  border-bottom: none;
+}
+.question-canvas-host[data-qc-detail='outline'] .qc-content {
+  display: none;
+}
+.question-canvas-host[data-qc-detail='outline'] .qc-card header * ,
+.question-canvas-host[data-qc-detail='outline'] .qc-group header * {
+  visibility: hidden;
+}
+
+/* Measurement must have the same dimensions, but use unconstrained document layout. */
+.question-canvas-measure .qc-card {
+  contain: none;
+}

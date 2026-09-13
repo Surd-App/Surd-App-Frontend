@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { getQuestions } from '../../api/question'
@@ -42,6 +42,10 @@ const fetchQuestions = async () => {
   } finally {
     loading.value = false
     loadingStep.value = 0
+    if (route.query.questionId) {
+      await nextTick()
+      document.getElementById('question-' + String(route.query.questionId))?.scrollIntoView({ block: 'center' })
+    }
   }
 }
 
@@ -85,6 +89,7 @@ onMounted(() => {
           <QuestionCard
             v-for="question in questions"
             :key="question.id"
+            :id="`question-${question.id}`"
             :question="question"
             @update-state="handleUpdateState"
           />

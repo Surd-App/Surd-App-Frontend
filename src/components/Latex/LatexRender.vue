@@ -1,51 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import katex from 'katex'
+import { cachedQuestionContent } from '../../utils/questionContentCache'
 
 const props = defineProps<{
   content: string
 }>()
 
-const renderLatex = (text: string): string => {
-  if (!text) return ''
-  let result = text
-  
-  result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: true, throwOnError: false })
-    } catch {
-      return `$$${formula}$$`
-    }
-  })
-  
-  result = result.replace(/\\\[([\s\S]+?)\\\]/g, (_, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: true, throwOnError: false })
-    } catch {
-      return `\\[${formula}\\]`
-    }
-  })
-  
-  result = result.replace(/\$([^\$]+?)\$/g, (_, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: false, throwOnError: false })
-    } catch {
-      return `$${formula}$`
-    }
-  })
-  
-  result = result.replace(/\\\(([\s\S]+?)\\\)/g, (_, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: false, throwOnError: false })
-    } catch {
-      return `\\(${formula}\\)`
-    }
-  })
-  
-  return result
-}
-
-const renderedContent = computed(() => renderLatex(props.content))
+const renderedContent = computed(() => cachedQuestionContent(props.content))
 </script>
 
 <template>
@@ -53,10 +14,21 @@ const renderedContent = computed(() => renderLatex(props.content))
 </template>
 
 <style scoped>
+@font-face {
+  font-family: 'DaguangKaTeXText';
+  src: url('../../assets/FangZhengShuSong_Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .latex-render-content {
   text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   line-height: 1.8;
   font-size: 1.15rem;
+  font-family: 'DaguangKaTeXText', system-ui, sans-serif;
 }
 
 :deep(.katex-display) {
@@ -67,5 +39,12 @@ const renderedContent = computed(() => renderLatex(props.content))
 
 :deep(.katex) {
   font-size: 1.05em;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+:deep(.katex .mord.text),
+:deep(.katex .mord.text span) {
+  font-family: 'DaguangKaTeXText', KaTeX_Main, serif !important;
 }
 </style>

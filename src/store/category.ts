@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { getCategories } from '../api/category';
 import type { Category } from '../api/types';
+import { downloadBank, readBank, readStates, type LocalBank } from '../utils/questionBank';
 
 export interface CategoryMeta {
   syncTime: number;
@@ -11,125 +11,98 @@ export interface CategoryMeta {
 
 export const useCategoryStore = defineStore('category', {
   state: () => ({
-    meta: JSON.parse(localStorage.getItem('category_meta') || 'null') as CategoryMeta | null,
+    meta: null as CategoryMeta | null,
+    roots: [] as Category[],
+    sourceUrl: '',
+    bankName: '',
+    initialized: false,
+    showSync: false,
+    showBankSwitcher: false,
     loading: false,
     syncProgress: 0,
     syncStatus: '',
   }),
-
   actions: {
-    async fetchAndSync() {
+    async loadBank(bank: LocalBank) {
+      const states = await readStates(bank.manifest.questionBank.subjectCode);
+      const nodes = new Map<number, Category>();
+      for (const category of bank.categories) {
+        const completed = category.questionIds.filter(id => states[id]?.is_mastered).length;
+        nodes.set(category.id, {
+          id: category.id, parent_id: category.parentId, name: category.name,
+          path: '', depth: 0, display_order: category.sortOrder,
+          question_count: category.questionIds.length, completed_count: completed,
+          total_question_count: category.questionIds.length, total_completed_count: completed,
+          children: [],
+        });
+      }
+      for (const node of nodes.values()) {
+        if (node.parent_id !== null) nodes.get(node.parent_id)?.children.push(node);
+      }
+      const roots = bank.manifest.questionBank.rootCategoryIds.map(id => nodes.get(id)).filter((node): node is Category => !!node);
+      const aggregate = (node: Category, depth: number, path: string) => {
+        node.depth = depth;
+        node.path = path ? `${path}/${node.name}` : node.name;
+        node.children.sort((a, b) => a.display_order - b.display_order);
+        for (const child of node.children) {
+          aggregate(child, depth + 1, node.path);
+          node.total_question_count += child.total_question_count;
+          node.total_completed_count += child.total_completed_count;
+        }
+      };
+      roots.forEach(root => aggregate(root, 0, ''));
+      this.roots = roots;
+      this.sourceUrl = bank.sourceUrl;
+      this.bankName = bank.displayName || bank.manifest.questionBank.name;
+      this.meta = {
+        syncTime: bank.syncTime, totalQuestions: bank.questions.length,
+        topLevelNames: roots.map(root => root.name), categoryIds: roots.map(root => root.id),
+      };
+    },
+    async initialize() {
+      if (this.initialized) return;
+      const bank = await readBank();
+      if (bank) await this.loadBank(bank);
+      this.initialized = true;
+    },
+    async fetchAndSync(url: string, name: string) {
       if (this.loading) return;
-      
       this.loading = true;
       this.syncProgress = 0;
-      this.syncStatus = '正在获取题库...';
-      
       try {
-        const categories = await getCategories();
-        
-        this.syncStatus = '获取成功，正在解析题库...';
-        
-        let totalQuestions = 0;
-        const topLevelNames: string[] = [];
-        const categoryIds: number[] = [];
-        
-        let count = 0;
-        for (const root of categories) {
-          totalQuestions += root.total_question_count;
-          topLevelNames.push(root.name);
-          categoryIds.push(root.id);
-          
-          localStorage.setItem(`category_data_${root.id}`, JSON.stringify(root));
-          
-          count++;
-          this.syncProgress = Math.round((count / categories.length) * 100);
-          this.syncStatus = `正在解析并保存题库 (${this.syncProgress}%)...`;
-        }
-        
-        const meta: CategoryMeta = {
-          syncTime: Date.now(),
-          totalQuestions,
-          topLevelNames,
-          categoryIds,
-        };
-        
-        localStorage.setItem('category_meta', JSON.stringify(meta));
-        this.meta = meta;
-        this.syncStatus = '同步完成';
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-      } catch (error: any) {
-        throw error;
+        const bank = await downloadBank(url, (percent, status) => {
+          this.syncProgress = percent;
+          this.syncStatus = status;
+        }, name);
+        await this.loadBank(bank);
+        this.initialized = true;
       } finally {
         this.loading = false;
-        this.syncProgress = 0;
-        this.syncStatus = '';
       }
     },
-
     getCategoryData(id: number): Category | null {
-      const data = localStorage.getItem(`category_data_${id}`);
-      return data ? JSON.parse(data) : null;
+      return this.findCategoryPath(id).at(-1) ?? null;
     },
-
     findCategoryPath(id: number): Category[] {
-      if (!this.meta) return [];
-      
-      const findInTree = (node: Category, targetId: number, path: Category[]): Category[] | null => {
-        if (node.id === targetId) return [...path, node];
-        if (node.children) {
-          for (const child of node.children) {
-            const found = findInTree(child, targetId, [...path, node]);
-            if (found) return found;
-          }
+      const find = (node: Category, path: Category[]): Category[] | null => {
+        if (node.id === id) return [...path, node];
+        for (const child of node.children) {
+          const result = find(child, [...path, node]);
+          if (result) return result;
         }
         return null;
       };
-
-      for (const rootId of this.meta.categoryIds) {
-        const rootData = this.getCategoryData(rootId);
-        if (rootData) {
-          const path = findInTree(rootData, id, []);
-          if (path) return path;
-        }
+      for (const root of this.roots) {
+        const result = find(root, []);
+        if (result) return result;
       }
       return [];
     },
-
     updateCategoryCounts(categoryId: number, delta: number) {
-      if (!this.meta) return;
-
-      try {
-        const findAndModify = (node: Category, targetId: number, d: number): boolean => {
-          if (node.id === targetId) {
-            node.completed_count = (Number(node.completed_count) || 0) + d;
-            node.total_completed_count = (Number(node.total_completed_count) || 0) + d;
-            return true;
-          }
-          if (node.children && Array.isArray(node.children)) {
-            for (const child of node.children) {
-              if (findAndModify(child, targetId, d)) {
-                node.total_completed_count = (Number(node.total_completed_count) || 0) + d;
-                return true;
-              }
-            }
-          }
-          return false;
-        };
-
-        for (const rootId of this.meta.categoryIds) {
-          const rootData = this.getCategoryData(rootId);
-          if (rootData) {
-            if (findAndModify(rootData, categoryId, delta)) {
-              localStorage.setItem(`category_data_${rootId}`, JSON.stringify(rootData));
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to update category counts in localStorage:', e);
-      }
-    }
-  }
+      const path = this.findCategoryPath(categoryId);
+      for (const node of path) node.total_completed_count = Math.max(0, node.total_completed_count + delta);
+      const leaf = path.at(-1);
+      if (leaf) leaf.completed_count = Math.max(0, leaf.completed_count + delta);
+    },
+  },
 });

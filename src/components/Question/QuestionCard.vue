@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import type { Question } from '../../api/types'
+import type { Question, UserQuestionState } from '../../api/types'
 import { 
   Video24Regular, 
   Note24Regular, 
@@ -11,12 +11,12 @@ import {
   BookmarkMultiple24Regular,
   BookmarkMultiple24Filled
 } from '@vicons/fluent'
+import QuestionContent from './QuestionContent.vue'
 import LatexRender from '../Latex/LatexRender.vue'
 import { toggleFavorite as apiToggleFavorite, toggleWrongBook as apiToggleWrongBook, toggleMastered as apiToggleMastered, saveQuestionNote, submitQuestionFeedback } from '../../api/question'
 import { useMessage } from 'naive-ui'
 import NoteModal from '../Interaction/NoteModal.vue'
 import FeedbackModal from '../Interaction/FeedbackModal.vue'
-import { useUserStore } from '../../store/user'
 import { useCategoryStore } from '../../store/category'
 import { useMobile } from '../../utils/responsive'
 
@@ -28,19 +28,13 @@ const props = defineProps<{
 }>()
 
 const categoryStore = useCategoryStore()
-const userStore = useUserStore()
 const pathNames = computed(() => {
   if (!props.showPath) return []
   return categoryStore.findCategoryPath(props.question.category_id).map(c => c.name)
 })
 
 const emit = defineEmits<{
-  updateState: [questionId: number, state: Partial<{
-    is_favorite: boolean
-    is_wrong_book: boolean
-    is_mastered: boolean
-    note: string
-  }>]
+  updateState: [questionId: number, state: Partial<UserQuestionState>]
 }>()
 
 const message = useMessage()
@@ -85,20 +79,7 @@ onMounted(() => {
   window.addEventListener('resize', checkPathOverflow)
 })
 
-const checkAuth = () => {
-  if (!userStore.checkAuth()) {
-    message.warning('请登录大观墙账号后继续！')
-    return false
-  }
-  return true
-}
-
-const hasOptions = () => {
-  return props.question.选项A || props.question.选项B || props.question.选项C || props.question.选项D
-}
-
 const toggleFavorite = async () => {
-  if (!checkAuth()) return
   loadingFavorite.value = true
   try {
     const res = await apiToggleFavorite(props.question.id)
@@ -113,7 +94,6 @@ const toggleFavorite = async () => {
 }
 
 const toggleWrongBook = async () => {
-  if (!checkAuth()) return
   loadingWrongBook.value = true
   try {
     const res = await apiToggleWrongBook(props.question.id)
@@ -128,14 +108,13 @@ const toggleWrongBook = async () => {
 }
 
 const toggleMastered = async () => {
-  if (!checkAuth()) return
   loadingMastered.value = true
   try {
     const res = await apiToggleMastered(props.question.id)
     const newState = res.is_mastered
     categoryStore.updateCategoryCounts(props.question.category_id, newState ? 1 : -1)
     
-    emit('updateState', props.question.id, { is_mastered: newState })
+    emit('updateState', props.question.id, { is_mastered: newState, mastered_at: res.mastered_at })
     message.success(newState ? '已标记为已掌握' : '已取消掌握标记')
   } catch (error) {
     message.error('操作失败')
@@ -145,7 +124,6 @@ const toggleMastered = async () => {
 }
 
 const handleNote = () => {
-  if (!checkAuth()) return
   showNoteModal.value = true
 }
 
@@ -164,14 +142,12 @@ const handleSaveNote = async (note: string) => {
 }
 
 const handleVideo = () => {
-  if (!checkAuth()) return
   if (props.question.video_url) {
     window.open(props.question.video_url, '_blank')
   }
 }
 
 const handleFeedback = () => {
-  if (!checkAuth()) return
   showFeedbackModal.value = true
 }
 
@@ -182,19 +158,17 @@ const handleSubmitFeedback = async (type: string, content: string) => {
     message.success('感谢您的反馈，我们会尽快核实')
     showFeedbackModal.value = false
   } catch (error) {
-    message.error('反馈提交失败，请重试')
+    message.error(error instanceof Error ? error.message : '反馈提交失败，请重试')
   } finally {
     submittingFeedback.value = false
   }
 }
 
 const toggleAnswer = () => {
-  if (!checkAuth()) return
   showAnswer.value = !showAnswer.value
 }
 
 const toggleAnalysis = () => {
-  if (!checkAuth()) return
   showAnalysis.value = !showAnalysis.value
 }
 </script>
@@ -310,24 +284,7 @@ const toggleAnalysis = () => {
 
       <n-divider style="margin: 0;" />
 
-      <LatexRender :content="question.题目内容" />
-
-      <template v-if="hasOptions()">
-        <n-grid :cols="isMobile ? 1 : 2" :x-gap="12" :y-gap="12">
-          <n-grid-item v-if="question.选项A">
-            <LatexRender :content="`A. ${question.选项A}`" />
-          </n-grid-item>
-          <n-grid-item v-if="question.选项B">
-            <LatexRender :content="`B. ${question.选项B}`" />
-          </n-grid-item>
-          <n-grid-item v-if="question.选项C">
-            <LatexRender :content="`C. ${question.选项C}`" />
-          </n-grid-item>
-          <n-grid-item v-if="question.选项D">
-            <LatexRender :content="`D. ${question.选项D}`" />
-          </n-grid-item>
-        </n-grid>
-      </template>
+      <QuestionContent :question="question" :is-mobile="isMobile" />
 
       <n-divider style="margin: 0;" />
 

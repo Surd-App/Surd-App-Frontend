@@ -1,6 +1,8 @@
-import { request } from '../utils/request';
+import { useCategoryStore } from '../store/category';
 import type { Category } from './types';
 
-export function getCategories(): Promise<Category[]> {
-  return request<Category[]>('/categories');
+export async function getCategories(): Promise<Category[]> {
+  const store = useCategoryStore();
+  await store.initialize();
+  return store.roots;
 }

@@ -16,13 +16,7 @@ const BASE_URL = urlConfig.url;
 export const isLocalDev = urlConfig.isLocal;
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = { ...(options.headers as any) };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
   if (!(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
@@ -33,12 +27,6 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user_info');
-      window.location.href = '/login';
-    }
-    
     const errorData = await response.json().catch(() => ({}));
     let errorMessage = errorData.detail || errorData.message || errorData.error;
     

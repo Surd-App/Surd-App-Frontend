@@ -1,16 +1,3 @@
-export interface User {
-  id: number;
-  username: string;
-  nickname: string;
-  role: 'user' | 'admin';
-  avatar?: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  user: User;
-}
-
 export interface Category {
   id: number;
   parent_id: number | null;
@@ -29,6 +16,8 @@ export interface UserQuestionState {
   is_favorite: boolean;
   is_wrong_book: boolean;
   is_mastered: boolean;
+  /** ISO timestamp; older local records may not have a mastery date. */
+  mastered_at?: string | null;
   note: string;
 }
 

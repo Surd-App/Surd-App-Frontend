@@ -2,32 +2,17 @@
 import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { useCategoryStore } from '../../store/category'
-import { Map24Regular, Book24Regular } from '@vicons/fluent'
+import { Book24Regular } from '@vicons/fluent'
 
 
 const categoryStore = useCategoryStore()
 const roots = computed(() => categoryStore.roots)
-const questionCount = computed(() => roots.value.reduce((total, root) => total + root.total_question_count, 0))
 
 const router = useRouter()
 </script>
 
 <template>
   <n-space vertical :size="24" class="card-map">
-    <n-card size="small" content-style="padding: 16px 20px;">
-      <n-page-header>
-        <template #title>
-          <n-flex align="center" :size="8" :wrap="false">
-            <n-icon size="24" color="var(--n-primary-color)"><Map24Regular /></n-icon>
-            <n-text strong style="font-size: 18px;">卡片地图</n-text>
-          </n-flex>
-        </template>
-        <template #extra>
-          <n-tag size="small" :bordered="false">{{ questionCount }} 题</n-tag>
-        </template>
-      </n-page-header>
-    </n-card>
-
     <n-empty v-if="roots.length === 0" description="暂无题库，请先导入在线题库" />
     <n-space v-for="root in roots" :key="root.id" vertical :size="12">
       <n-flex align="center" :size="8">

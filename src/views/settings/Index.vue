@@ -53,7 +53,7 @@ async function selectImage({ file }: { file: UploadFileInfo }) {
 </script>
 
 <template>
-  <n-tabs type="line" default-value="personalization" class="settings-tabs">
+  <n-tabs type="card" default-value="personalization" class="settings-tabs">
     <n-tab-pane name="personalization" tab="个性化">
       <n-alert v-if="loadError" type="error" :title="loadError">
         <n-button size="small" @click="initialize">重试</n-button>

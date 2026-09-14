@@ -69,7 +69,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
-  const baseTitle = '大观墙';
+  const baseTitle = 'Surd 无理';
   const subTitle = to.meta.title as string;
   document.title = subTitle ? `${subTitle} - ${baseTitle}` : baseTitle;
 });

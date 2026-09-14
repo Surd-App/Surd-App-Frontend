@@ -358,7 +358,7 @@ const toggleAnalysis = () => {
               @click="handleVideo"
             >
               <template #icon><n-icon><Video24Regular /></n-icon></template>
-              大观视频
+              Surd 无理视频
             </n-button>
             <n-button size="medium" secondary style="flex: 1;" @click="handleFeedback">
               <template #icon><n-icon><ErrorCircle24Regular /></n-icon></template>
@@ -391,7 +391,7 @@ const toggleAnalysis = () => {
             <template #icon>
               <n-icon><Video24Regular /></n-icon>
             </template>
-            大观视频
+            Surd 无理视频
           </n-button>
           <n-button size="medium" secondary @click="handleFeedback">
             <template #icon>

@@ -50,7 +50,7 @@ watch(isMobile, (newVal) => {
   >
     <n-space vertical size="large">
       <n-text depth="2" style="line-height: 1.6; font-size: 16px;">
-        大观墙目前只适配了Pad和PC端的横屏显示，移动设备适配正在进行中，可能无法正常浏览体验！请更换设备获得最佳体验。
+        Surd 无理目前只适配了Pad和PC端的横屏显示，移动设备适配正在进行中，可能无法正常浏览体验！请更换设备获得最佳体验。
       </n-text>
       
       <n-button 

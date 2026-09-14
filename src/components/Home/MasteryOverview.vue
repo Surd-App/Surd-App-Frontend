@@ -83,7 +83,7 @@ const completedSections = computed(() => categoryStore.roots.reduce((count, root
   count + root.children.filter(child => child.total_question_count > 0 &&
     child.total_completed_count === child.total_question_count).length, 0))
 const statsData = computed(() => [
-  { label: '大观总量', value: masteryTotal.value, icon: Rocket24Regular, color: '#2080f0' },
+  { label: '题目总量', value: masteryTotal.value, icon: Rocket24Regular, color: '#2080f0' },
   { label: '已经拿下', value: masteryCount.value, icon: History24Regular, color: '#18a058' },
   { label: '待练习', value: masteryTotal.value - masteryCount.value, icon: Target24Regular, color: '#f0a020' },
   { label: '完成章节', value: completedSections.value, icon: Star24Regular, color: '#8a63d2' },

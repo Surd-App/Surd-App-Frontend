@@ -35,7 +35,7 @@ export function openDatabase(): Promise<IDBDatabase> {
     request.onerror = () => { database = undefined; reject(request.error); };
     request.onblocked = () => {
       database = undefined;
-      reject(new Error('请关闭其他打开的大观墙页面后刷新，以完成本地存储升级'));
+      reject(new Error('请关闭其他打开的 Surd 无理页面后刷新，以完成本地存储升级'));
       request.onsuccess = () => request.result.close();
     };
   });

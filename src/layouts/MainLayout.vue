@@ -87,7 +87,7 @@ onMounted(async () => {
   if (categoryStore.meta) {
     const date = new Date(categoryStore.meta.syncTime)
     const formattedDate = `${date.getFullYear()}年${(date.getMonth() + 1).toString().padStart(2, '0')}月${date.getDate().toString().padStart(2, '0')}日${date.getHours().toString().padStart(2, '0')}时${date.getMinutes().toString().padStart(2, '0')}分${date.getSeconds().toString().padStart(2, '0')}秒`
-    message.success('成功加载本地大观题库！')
+    message.success('成功加载本地 Surd 无理题库！')
     message.info(`上次导入时间：${formattedDate}`)
   } else {
     try {
@@ -283,10 +283,10 @@ function renderMenuLabel(option: any) {
       >
         <n-flex :justify="collapsed ? 'center' : 'flex-start'" align="center" :style="{ height: '64px', paddingLeft: collapsed ? '0' : '24px', overflow: 'hidden' }">
           <n-gradient-text v-if="!collapsed" type="primary" :size="24" weight="bold" style="white-space: nowrap;">
-            大观墙
+            Surd 无理
           </n-gradient-text>
           <n-gradient-text v-else type="primary" :size="24" weight="bold">
-            观
+            S
           </n-gradient-text>
         </n-flex>
         <n-menu
@@ -364,7 +364,7 @@ function renderMenuLabel(option: any) {
   <SyncModal />
 
   <n-drawer class="navigation-surface" v-model:show="showMobileMenu" :width="280" placement="left">
-    <n-drawer-content title="大观墙" closable>
+    <n-drawer-content title="Surd 无理" closable>
       <n-menu
         :value="(route.name as string)"
         :options="menuOptions"

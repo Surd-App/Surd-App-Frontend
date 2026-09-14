@@ -15,7 +15,7 @@ const renderedContent = computed(() => cachedQuestionContent(props.content))
 
 <style scoped>
 @font-face {
-  font-family: 'DaguangKaTeXText';
+  font-family: 'SurdKaTeXText';
   src: url('../../assets/FangZhengShuSong_Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
@@ -28,7 +28,7 @@ const renderedContent = computed(() => cachedQuestionContent(props.content))
   overflow-wrap: anywhere;
   line-height: 1.8;
   font-size: 1.15rem;
-  font-family: 'DaguangKaTeXText', system-ui, sans-serif;
+  font-family: 'SurdKaTeXText', system-ui, sans-serif;
 }
 
 :deep(.katex-display) {
@@ -45,6 +45,6 @@ const renderedContent = computed(() => cachedQuestionContent(props.content))
 
 :deep(.katex .mord.text),
 :deep(.katex .mord.text span) {
-  font-family: 'DaguangKaTeXText', KaTeX_Main, serif !important;
+  font-family: 'SurdKaTeXText', KaTeX_Main, serif !important;
 }
 </style>

@@ -23,7 +23,7 @@ async function download() {
     const url = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' }))
     const link = document.createElement('a')
     link.href = url
-    link.download = `大观墙备份-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+    link.download = `Surd无理备份-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
     document.body.appendChild(link)
     link.click()
     link.remove()

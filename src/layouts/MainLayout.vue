@@ -281,12 +281,10 @@ function renderMenuLabel(option: any) {
         @collapse="collapsed = true"
         @expand="collapsed = false"
       >
-        <n-flex :justify="collapsed ? 'center' : 'flex-start'" align="center" :style="{ height: '64px', paddingLeft: collapsed ? '0' : '24px', overflow: 'hidden' }">
+        <n-flex :justify="collapsed ? 'center' : 'flex-start'" align="center" :wrap="false" :size="10" :style="{ height: '64px', paddingLeft: collapsed ? '0' : '24px', overflow: 'hidden' }">
+          <img src="/surd-logo.svg" alt="Surd 无理 Logo" width="32" height="32" style="object-fit: contain; flex-shrink: 0;" />
           <n-gradient-text v-if="!collapsed" type="primary" :size="24" weight="bold" style="white-space: nowrap;">
             Surd 无理
-          </n-gradient-text>
-          <n-gradient-text v-else type="primary" :size="24" weight="bold">
-            S
           </n-gradient-text>
         </n-flex>
         <n-menu

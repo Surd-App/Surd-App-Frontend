@@ -65,17 +65,19 @@ onMounted(() => {
 
 <template>
   <n-space vertical :size="24">
-    <n-page-header class="content-page-header">
-      <template #title>
-        <n-flex align="center" :size="8">
-          <n-icon size="26" color="var(--n-primary-color)"><ClipboardError24Regular /></n-icon>
-          <span>错题本</span>
-        </n-flex>
-      </template>
-      <template #extra>
-        <n-statistic label="数量" :value="questions.length" />
-      </template>
-    </n-page-header>
+    <n-card size="small" content-style="padding: 16px 20px;">
+      <n-page-header>
+        <template #title>
+          <n-flex align="center" :size="8" :wrap="false">
+            <n-icon size="24" color="var(--n-primary-color)"><ClipboardError24Regular /></n-icon>
+            <n-text strong style="font-size: 18px;">错题本</n-text>
+          </n-flex>
+        </template>
+        <template #extra>
+          <n-tag size="small" :bordered="false">{{ questions.length }} 题</n-tag>
+        </template>
+      </n-page-header>
+    </n-card>
 
     <n-spin :show="loading" :description="loadingText">
       <div :style="{ minHeight: loading ? '60vh' : 'auto' }" style="display: flex; flex-direction: column; justify-content: center;">

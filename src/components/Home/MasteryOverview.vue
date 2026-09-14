@@ -1,20 +1,30 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import MasteryHeatmap from './MasteryHeatmap.vue'
 import { NScrollbar, NTab, NTabs, useThemeVars } from 'naive-ui'
 import { Rocket24Regular, History24Regular, Target24Regular, Star24Regular } from '@vicons/fluent'
 import { useCategoryStore } from '../../store/category'
-import { readBank, readStates, type LocalBank } from '../../utils/questionBank'
+import type { UserQuestionState } from '../../api/types'
+import type { LocalBank } from '../../utils/questionBank'
+import { collectMasteryDates } from '../../utils/masteryHeatmap'
+
+const props = defineProps<{
+  bank: LocalBank | null
+  states: Record<number, UserQuestionState>
+}>()
 
 const categoryStore = useCategoryStore()
 const themeVars = useThemeVars()
 const heatmapWidth = ref(0)
-const bank = shallowRef<LocalBank | null>(null)
-const masteredIds = ref(new Set<number>())
-const loading = ref(true)
-const loadError = ref(false)
-const masteryTotal = computed(() => bank.value?.questions.length ?? 0)
-const masteryCount = computed(() => bank.value?.questions.filter(question => masteredIds.value.has(question.id)).length ?? 0)
+const masteredIds = computed(() => new Set(Object.entries(props.states)
+  .filter(([, state]) => state.is_mastered)
+  .map(([id]) => Number(id))))
+const masteryDates = computed(() => collectMasteryDates(
+  props.bank?.questions.map(question => question.id) ?? [],
+  props.states,
+).dates)
+const masteryTotal = computed(() => props.bank?.questions.length ?? 0)
+const masteryCount = computed(() => props.bank?.questions.filter(question => masteredIds.value.has(question.id)).length ?? 0)
 const masteryRate = computed(() => masteryTotal.value ? Math.round(masteryCount.value / masteryTotal.value * 100) : 0)
 const rootProgress = computed(() => categoryStore.roots.map(root => ({
   id: root.id,
@@ -25,7 +35,7 @@ const rootProgress = computed(() => categoryStore.roots.map(root => ({
 const activeRoot = ref<number | 'all'>('all')
 const questionGroups = computed(() => {
   const groups = new Map<number, Set<number>>()
-  const categories = bank.value?.categories ?? []
+  const categories = props.bank?.categories ?? []
   const byParent = new Map<number | null, typeof categories>()
   for (const category of categories) {
     const siblings = byParent.get(category.parentId) ?? []
@@ -33,7 +43,7 @@ const questionGroups = computed(() => {
     byParent.set(category.parentId, siblings)
   }
   const byId = new Map(categories.map(category => [category.id, category]))
-  for (const rootId of bank.value?.manifest.questionBank.rootCategoryIds ?? []) {
+  for (const rootId of props.bank?.manifest.questionBank.rootCategoryIds ?? []) {
     const ids = new Set<number>()
     const root = byId.get(rootId)
     const pending = root ? [root] : []
@@ -47,20 +57,13 @@ const questionGroups = computed(() => {
   return groups
 })
 const visibleQuestions = computed(() => {
-  const questions = (bank.value?.questions ?? []).map((question, index) => ({ question, number: index + 1 }))
+  const questions = (props.bank?.questions ?? []).map((question, index) => ({ question, number: index + 1 }))
   if (activeRoot.value === 'all') return questions
   const ids = questionGroups.value.get(activeRoot.value)
   return questions.filter(({ question }) => ids?.has(question.id))
 })
 const renderedCount = ref(0)
 const renderedQuestions = computed(() => visibleQuestions.value.slice(0, renderedCount.value))
-const yieldToBrowser = () => new Promise<void>(resolve => {
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(() => resolve(), { timeout: 120 })
-  } else {
-    window.setTimeout(resolve, 32)
-  }
-})
 // Keep each DOM update small so navigation and progress animations can continue.
 watch(visibleQuestions, questions => {
   renderedCount.value = Math.min(160, questions.length)
@@ -89,42 +92,12 @@ const statsData = computed(() => [
   { label: '完成章节', value: completedSections.value, icon: Star24Regular, color: '#8a63d2' },
 ])
 
-// Syncing a bank or changing mastery updates the store; reload the local snapshot too.
-watch(() => [categoryStore.meta, ...categoryStore.roots.map(root => root.total_completed_count)], async (_value, _oldValue, onCleanup) => {
-  let cancelled = false
-  onCleanup(() => { cancelled = true })
-  loading.value = true
-  loadError.value = false
-  try {
-    // Yield the initial frame before loading and processing the local snapshot.
-    await yieldToBrowser()
-    if (cancelled) return
-    const nextBank = await readBank()
-    const states = nextBank ? await readStates(nextBank.manifest.questionBank.subjectCode) : {}
-    if (cancelled) return
-    // Commit the large snapshot during idle time, after navigation animations.
-    await yieldToBrowser()
-    if (cancelled) return
-    bank.value = nextBank
-    masteredIds.value = new Set(Object.entries(states)
-      .filter(([, state]) => state.is_mastered)
-      .map(([id]) => Number(id)))
-  } catch (error) {
-    if (cancelled) return
-    loadError.value = true
-    console.error('Failed to load mastery overview', error)
-  } finally {
-    if (!cancelled) loading.value = false
-  }
-}, { immediate: true, flush: 'post' })
 </script>
 
 <template>
   <n-card title="题目掌握总览" :segmented="{ content: true }">
     <div class="mastery-content">
-        <n-empty v-if="loadError && !bank" description="掌握数据加载失败，请刷新重试" />
-        <n-skeleton v-else-if="loading && !bank" text :repeat="3" />
-        <n-empty v-else-if="!masteryTotal" description="当前题库为空，或未选择任何题库" />
+        <n-empty v-if="!masteryTotal" description="当前题库为空，或未选择任何题库" />
         <div v-else-if="bank" class="mastery-overview" :style="{ '--heatmap-width': heatmapWidth ? `${heatmapWidth}px` : 'max-content' }">
           <div class="mastery-left">
             <div class="rings-panel">
@@ -152,7 +125,11 @@ watch(() => [categoryStore.meta, ...categoryStore.roots.map(root => root.total_c
                 </div>
               </div>
             </div>
-            <MasteryHeatmap @preferred-width="heatmapWidth = $event" />
+            <MasteryHeatmap
+              :dates="masteryDates"
+              :has-bank="masteryTotal > 0"
+              @preferred-width="heatmapWidth = $event"
+            />
           </div>
           <div class="mastery-summary">
             <n-tabs v-model:value="activeRoot" type="line" size="small" class="question-tabs">

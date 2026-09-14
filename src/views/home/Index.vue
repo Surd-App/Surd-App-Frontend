@@ -1,33 +1,68 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, shallowRef } from 'vue'
 import { useCategoryStore } from '../../store/category'
 import { useMobile } from '../../utils/responsive'
-import type { Notification } from '../../api/types'
+import type { Notification, UserQuestionState } from '../../api/types'
 import AnnouncementModal from '../../components/Interaction/AnnouncementModal.vue'
 import upAvatar from '../../assets/chengxiaoyu-avatar.jpg'
 import qrCode from '../../assets/qrcode.jpg'
 import MasteryOverview from '../../components/Home/MasteryOverview.vue'
+import { readBank, readStates, type LocalBank } from '../../utils/questionBank'
 
 const categoryStore = useCategoryStore()
 const liveAnnouncements: Notification[] = []
 const { isMobile } = useMobile()
 const selectedAnno = ref<Notification | null>(null)
 const showModal = ref(false)
-const loading = false
+const bank = shallowRef<LocalBank | null>(null)
+const states = shallowRef<Record<number, UserQuestionState>>({})
+const loading = ref(true)
+const loadError = ref('')
 
 const handleShowDetail = (anno: Notification) => {
   selectedAnno.value = anno
   showModal.value = true
 }
 
-onMounted(() => {
-  void categoryStore.initialize()
-})
+async function loadHome() {
+  loading.value = true
+  loadError.value = ''
+  try {
+    await categoryStore.initialize()
+    const nextBank = await readBank()
+    const nextStates = nextBank
+      ? await readStates(nextBank.manifest.questionBank.subjectCode)
+      : {}
+    bank.value = nextBank
+    states.value = nextStates
+  } catch (cause) {
+    loadError.value = cause instanceof Error ? cause.message : '首页数据加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadHome)
 </script>
 
 <template>
-  <n-space vertical size="large">
-    <MasteryOverview />
+  <div class="home-page">
+    <n-alert v-if="loadError" type="error" title="首页数据加载失败">
+      {{ loadError }}
+      <template #action>
+        <n-button size="small" :loading="loading" @click="loadHome">重试</n-button>
+      </template>
+    </n-alert>
+
+    <n-spin class="home-loading" :show="loading" content-style="min-height: 100%;">
+      <n-space
+        v-if="!loadError"
+        class="home-content"
+        :class="{ 'home-content-ready': !loading }"
+        vertical
+        size="large"
+      >
+        <MasteryOverview :bank="bank" :states="states" />
 
     <!-- 移动端布局 -->
     <template v-if="isMobile">
@@ -57,7 +92,6 @@ onMounted(() => {
 
         <n-grid-item>
           <n-card title="公告看板" :segmented="{ content: true }" :content-style="{ padding: '0px' }">
-            <n-spin :show="loading">
               <n-list v-if="liveAnnouncements.length > 0" hoverable clickable :bordered="false">
                 <template v-for="(anno, index) in liveAnnouncements" :key="anno.id">
                   <n-list-item @click="handleShowDetail(anno)" style="padding: 12px 16px;">
@@ -71,10 +105,9 @@ onMounted(() => {
                   <n-divider v-if="index < liveAnnouncements.length - 1" style="margin: 0;" />
                 </template>
               </n-list>
-              <n-flex v-else-if="!loading" vertical align="center" justify="center" style="height: 120px;">
+              <n-flex v-else vertical align="center" justify="center" style="height: 120px;">
                 <n-empty description="暂无公告" />
               </n-flex>
-            </n-spin>
           </n-card>
         </n-grid-item>
       </n-grid>
@@ -116,7 +149,6 @@ onMounted(() => {
 
         <n-grid-item>
           <n-card title="公告看板" :segmented="{ content: true }" :content-style="{ padding: '0px' }" style="height: 100%;">
-            <n-spin :show="loading" style="min-height: 200px;">
               <template v-if="liveAnnouncements.length > 0">
                 <n-list hoverable clickable :bordered="false">
                   <template v-for="(anno, index) in liveAnnouncements" :key="anno.id">
@@ -137,20 +169,42 @@ onMounted(() => {
                   </template>
                 </n-list>
               </template>
-              <template v-else-if="!loading">
+              <template v-else>
                 <n-flex vertical align="center" justify="center" style="height: 200px;">
                   <n-empty description="暂无公告" />
                 </n-flex>
               </template>
-            </n-spin>
           </n-card>
         </n-grid-item>
       </n-grid>
     </template>
 
-    <AnnouncementModal
-      v-model:show="showModal"
-      :notification="selectedAnno"
-    />
-  </n-space>
+        <AnnouncementModal
+          v-model:show="showModal"
+          :notification="selectedAnno"
+        />
+      </n-space>
+    </n-spin>
+  </div>
 </template>
+
+<style scoped>
+.home-page {
+  min-height: calc(100dvh - 112px);
+}
+
+.home-loading {
+  min-height: calc(100dvh - 112px);
+}
+
+.home-content {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.home-content-ready {
+  visibility: visible;
+  opacity: 1;
+}
+</style>

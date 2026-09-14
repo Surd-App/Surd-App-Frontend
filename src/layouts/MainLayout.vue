@@ -386,6 +386,15 @@ function renderMenuLabel(option: any) {
   background-color: color-mix(in srgb, var(--n-color) 90%, transparent);
 }
 
+.page-background :deep(.content-page-header) {
+  box-sizing: border-box;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--n-text-color) 12%, transparent);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--n-color) 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+
 .navigation-surface {
   background-color: color-mix(in srgb, var(--n-color) 94%, transparent);
   backdrop-filter: blur(4px);

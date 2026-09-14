@@ -13,7 +13,7 @@ const router = useRouter()
 
 <template>
   <n-space vertical :size="24" class="card-map">
-    <n-page-header>
+    <n-page-header class="content-page-header">
       <template #title>
         <n-flex align="center" :size="8">
           <n-icon size="26" color="var(--n-primary-color)"><Map24Regular /></n-icon>

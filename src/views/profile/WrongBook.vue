@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui'
 import { getWrongQuestions } from '../../api/question'
 import type { Question } from '../../api/types'
 import QuestionCard from '../../components/Question/QuestionCard.vue'
-import { ArrowCounterclockwise24Regular } from '@vicons/fluent'
+import { ArrowCounterclockwise24Regular, ClipboardError24Regular } from '@vicons/fluent'
 
 const message = useMessage()
 const questions = ref<Question[]>([])
@@ -65,9 +65,12 @@ onMounted(() => {
 
 <template>
   <n-space vertical :size="24">
-    <n-page-header>
+    <n-page-header class="content-page-header">
       <template #title>
-        <n-text>错题本</n-text>
+        <n-flex align="center" :size="8">
+          <n-icon size="26" color="var(--n-primary-color)"><ClipboardError24Regular /></n-icon>
+          <span>错题本</span>
+        </n-flex>
       </template>
       <template #extra>
         <n-statistic label="数量" :value="questions.length" />

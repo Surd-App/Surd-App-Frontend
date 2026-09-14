@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useCategoryStore } from '../../store/category'
 import { useMobile } from '../../utils/responsive'
-import { getNotifications } from '../../api/notification'
 import type { Notification } from '../../api/types'
 import AnnouncementModal from '../../components/Interaction/AnnouncementModal.vue'
 import upAvatar from '../../assets/chengxiaoyu-avatar.jpg'
@@ -10,21 +9,11 @@ import qrCode from '../../assets/qrcode.jpg'
 import MasteryOverview from '../../components/Home/MasteryOverview.vue'
 
 const categoryStore = useCategoryStore()
-const liveAnnouncements = ref<Notification[]>([])
+const liveAnnouncements: Notification[] = []
 const { isMobile } = useMobile()
 const selectedAnno = ref<Notification | null>(null)
 const showModal = ref(false)
-const loading = ref(false)
-const fetchAnnos = async () => {
-  loading.value = true
-  try {
-    liveAnnouncements.value = await getNotifications()
-  } catch (error) {
-    console.error('Failed to fetch notifications', error)
-  } finally {
-    loading.value = false
-  }
-}
+const loading = false
 
 const handleShowDetail = (anno: Notification) => {
   selectedAnno.value = anno
@@ -33,7 +22,6 @@ const handleShowDetail = (anno: Notification) => {
 
 onMounted(() => {
   void categoryStore.initialize()
-  void fetchAnnos()
 })
 </script>
 

@@ -24,39 +24,5 @@ export default defineConfig({
     Components({
       resolvers: [NaiveUiResolver()]
     })
-  ],
-  server: {
-    allowedHosts: ['malayrental.cn'],
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-        // @ts-ignore
-        router: (req: any) => {
-          const host = req.headers.host
-          if (host && host.includes('malayrental.cn')) {
-            return 'https://paladiyu.com'
-          }
-          return 'http://127.0.0.1:5000'
-        }
-      }
-    }
-  },
-  preview: {
-    allowedHosts: ['malayrental.cn'],
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-        // @ts-ignore
-        router: (req: any) => {
-          const host = req.headers.host
-          if (host && host.includes('malayrental.cn')) {
-            return 'https://paladiyu.com'
-          }
-          return 'http://127.0.0.1:5000'
-        }
-      }
-    }
-  }
+  ]
 })

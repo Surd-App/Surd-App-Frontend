@@ -21,7 +21,6 @@ import { useSettingsStore } from '../store/settings'
 import { useCategoryStore } from '../store/category'
 import { useMobile } from '../utils/responsive'
 import { useMessage } from 'naive-ui'
-import { isLocalDev } from '../utils/request'
 import SyncModal from '../components/Interaction/SyncModal.vue'
 import BankSwitcher from '../components/Interaction/BankSwitcher.vue'
 import { listBanks } from '../utils/questionBank'
@@ -71,10 +70,6 @@ onMounted(async () => {
     const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     themeStore.setTheme(isSystemDark)
     message.info(`已跟随系统切换为${isSystemDark ? '深色' : '浅色'}模式`, { duration: 3000 })
-  }
-
-  if (isLocalDev) {
-    message.info('检测到开发环境，正在使用本地代理转发')
   }
 
   try {

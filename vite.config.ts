@@ -5,7 +5,7 @@ import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
-  base: '/Surd-App-Frontend/',
+  base: '/',
   plugins: [
     vue(),
     AutoImport({

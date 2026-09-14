@@ -39,17 +39,6 @@ let bankSnapshot: Promise<LocalBank | null> | undefined;
 const bankChanges = typeof BroadcastChannel === 'undefined' ? undefined : new BroadcastChannel('daguan-bank-changes');
 if (bankChanges) bankChanges.onmessage = () => { bankSnapshot = undefined; };
 
-function createUniqueId(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID();
-  }
-  if (typeof globalThis.crypto?.getRandomValues === 'function') {
-    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
-    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
-
 export function readBank(): Promise<LocalBank | null> {
   if (!bankSnapshot) {
     const pending = loadBankSnapshot();
@@ -97,7 +86,7 @@ export async function createLocalBank(input: string): Promise<LocalBank> {
   if (!name) throw new Error('请输入题库名称');
   const { banks } = await listBanks();
   if (banks.some(bank => bank.name.trim() === name)) throw new Error('题库名称已存在，请使用其他名称');
-  const id = `local:${createUniqueId()}`;
+  const id = `local:${Date.now()}`;
   const bank: LocalBank = {
     displayName: name,
     manifest: {
@@ -507,7 +496,7 @@ export async function downloadBank(input: string, progress: (percent: number, st
   } else {
     // The same online bank can be saved under multiple local names.
     const baseId = manifest.questionBank.id;
-    const uniqueId = createUniqueId();
+    const uniqueId = Date.now();
     manifest.questionBank.id = `local:${baseId}:${uniqueId}`;
   }
   const total = manifest.chunks.categories.length + manifest.chunks.questions.length;

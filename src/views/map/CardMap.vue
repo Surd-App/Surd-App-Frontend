@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { useCategoryStore } from '../../store/category'
 import { Book24Regular } from '@vicons/fluent'
+import EmptyState from '../../components/EmptyState.vue'
 
 
 const categoryStore = useCategoryStore()
@@ -13,13 +14,17 @@ const router = useRouter()
 
 <template>
   <n-space vertical :size="24" class="card-map">
-    <n-empty v-if="roots.length === 0" description="暂无题库，请先导入在线题库" />
+    <EmptyState v-if="roots.length === 0" page />
     <n-space v-for="root in roots" :key="root.id" vertical :size="12">
-      <n-flex align="center" :size="8">
-        <n-icon size="20" color="var(--n-primary-color)"><Book24Regular /></n-icon>
-        <n-text strong style="font-size: 20px">{{ root.name }}</n-text>
-        <n-tag size="small" :bordered="false">{{ root.total_question_count }} 题</n-tag>
-      </n-flex>
+      <n-card size="small" class="root-card" content-style="padding: 14px 16px;">
+        <n-flex justify="space-between" align="center" :wrap="false">
+          <n-flex align="center" :size="8" :wrap="false" style="min-width: 0;">
+            <n-icon size="20" color="var(--n-primary-color)"><Book24Regular /></n-icon>
+            <n-text strong ellipsis>{{ root.name }}</n-text>
+          </n-flex>
+          <n-tag size="small" :bordered="false" style="flex-shrink: 0;">{{ root.total_question_count }} 题</n-tag>
+        </n-flex>
+      </n-card>
       <n-grid :cols="'1 s:2 m:3 l:4'" responsive="screen" :x-gap="12" :y-gap="12">
         <n-grid-item v-for="category in root.children" :key="category.id">
           <n-card size="small" :title="category.name" class="map-card">
@@ -49,5 +54,9 @@ const router = useRouter()
 
 .map-card {
   height: 100%;
+}
+
+.root-card {
+  width: 100%;
 }
 </style>

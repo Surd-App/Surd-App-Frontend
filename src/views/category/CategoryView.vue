@@ -6,6 +6,7 @@ import { useMobile } from '../../utils/responsive'
 import { Book24Regular, ChevronDown24Regular } from '@vicons/fluent'
 import type { Category } from '../../api/types'
 import DeepLevelItem from '../../components/Category/DeepLevelItem.vue'
+import EmptyState from '../../components/EmptyState.vue'
 
 const { isMobile } = useMobile()
 const route = useRoute()
@@ -139,7 +140,7 @@ watch([categoryData, () => route.query.target], () => {
 
               <n-divider style="margin: 0;" />
 
-              <n-list :hoverable="!isMobile" clickable size="small">
+              <n-list class="category-list" :hoverable="!isMobile" clickable size="small">
                 <template v-if="level2.children.length > 0">
                   <template v-for="level3 in level2.children" :key="level3.id">
                     <n-list-item :id="`category-${level3.id}`" @click="level3.children.length > 0 ? toggleExpand(level3.id) : handleStartPractice(level3, $event)">
@@ -295,7 +296,7 @@ watch([categoryData, () => route.query.target], () => {
 
               <n-divider style="margin: 0;" />
 
-              <n-list hoverable clickable>
+              <n-list class="category-list" hoverable clickable>
                 <template v-if="level2.children.length > 0">
                   <template v-for="level3 in level2.children" :key="level3.id">
                     <n-list-item :id="`category-${level3.id}`" @click="level3.children.length > 0 ? toggleExpand(level3.id) : handleStartPractice(level3, $event)">
@@ -420,7 +421,7 @@ watch([categoryData, () => route.query.target], () => {
       </n-space>
     </template>
     <template v-else>
-      <n-empty description="未找到分类数据" h-full flex items-center justify-center />
+      <EmptyState page />
     </template>
   </div>
 </template>
@@ -428,6 +429,10 @@ watch([categoryData, () => route.query.target], () => {
 <style scoped>
 .category-view {
   width: 100%;
+}
+
+.category-list {
+  background-color: transparent;
 }
 
 @media (max-width: 768px) {

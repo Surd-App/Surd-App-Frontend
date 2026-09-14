@@ -58,7 +58,7 @@ async function restore() {
 </script>
 
 <template>
-  <n-space vertical :size="16">
+  <n-list class="settings-list" :bordered="false" show-divider>
     <SettingCard title="导出本地数据" description="备份全部学科的掌握状态与时间、收藏、错题、笔记，以及背景图片和主题设置，不包含题库。" :icon="ArrowDownload24Regular">
       <template #actions>
         <n-button :disabled="busy" :loading="exporting" @click="download">导出备份</n-button>
@@ -71,7 +71,7 @@ async function restore() {
         </n-upload>
       </template>
     </SettingCard>
-  </n-space>
+  </n-list>
   <n-modal v-model:show="showConfirm" preset="card" title="确认导入备份" style="width: min(480px, calc(100vw - 32px))" :closable="!importing" :mask-closable="!importing" :close-on-esc="!importing">
     <n-space v-if="pending" vertical :size="16">
       <n-text>备份时间：{{ new Date(pending.exportedAt).toLocaleString('zh-CN') }}</n-text>
@@ -86,5 +86,7 @@ async function restore() {
 </template>
 
 <style scoped>
+.settings-list { background-color: transparent; }
+.settings-list :deep(.setting-item:first-child) { padding-top: 8px; }
 .backup-upload { width: auto; }
 </style>

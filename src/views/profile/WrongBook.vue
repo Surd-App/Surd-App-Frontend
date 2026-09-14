@@ -4,6 +4,7 @@ import { useMessage } from 'naive-ui'
 import { getWrongQuestions } from '../../api/question'
 import type { Question } from '../../api/types'
 import QuestionCard from '../../components/Question/QuestionCard.vue'
+import EmptyState from '../../components/EmptyState.vue'
 import { ArrowCounterclockwise24Regular } from '@vicons/fluent'
 
 const message = useMessage()
@@ -64,7 +65,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-space vertical :size="24">
+  <EmptyState v-if="!loading && questions.length === 0" page />
+  <n-space v-else vertical :size="24">
     <n-spin :show="loading" :description="loadingText">
       <div :style="{ minHeight: loading ? '60vh' : 'auto' }" style="display: flex; flex-direction: column; justify-content: center;">
         <n-space v-if="questions.length > 0 && !loading" vertical :size="16">
@@ -77,11 +79,6 @@ onMounted(() => {
           />
         </n-space>
         
-        <n-empty 
-          v-if="!loading && questions.length === 0" 
-          description="错题本空空如也"
-          style="padding: 100px 0; flex: 1; justify-content: center;"
-        />
       </div>
     </n-spin>
 

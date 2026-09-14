@@ -5,6 +5,7 @@ import { useMessage } from 'naive-ui'
 import { getQuestions } from '../../api/question'
 import type { Question } from '../../api/types'
 import QuestionCard from '../../components/Question/QuestionCard.vue'
+import EmptyState from '../../components/EmptyState.vue'
 
 const route = useRoute()
 const message = useMessage()
@@ -67,7 +68,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-space vertical :size="24">
+  <EmptyState v-if="!loading && questions.length === 0" page />
+  <n-space v-else vertical :size="24">
     <n-page-header>
       <template #title>
         <n-text>题目练习</n-text>
@@ -95,11 +97,6 @@ onMounted(() => {
           />
         </n-space>
         
-        <n-empty 
-          v-if="!loading && questions.length === 0" 
-          description="暂无题目"
-          style="padding: 100px 0; flex: 1; justify-content: center;"
-        />
       </div>
     </n-spin>
   </n-space>

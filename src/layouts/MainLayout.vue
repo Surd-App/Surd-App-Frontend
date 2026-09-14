@@ -254,7 +254,7 @@ function renderMenuLabel(option: any) {
         class="page-background"
         :class="{ 'bank-management-layout': route.name === 'bank-management', 'bing-background': bingBackground, 'bing-background-ready': bingReady, 'light-background': !themeStore.isDark }"
         :style="homeBackgroundStyle"
-        :content-style="{ padding: '16px' }"
+        :content-style="{ padding: '16px', minHeight: '100%', boxSizing: 'border-box', position: 'relative' }"
         :native-scrollbar="false"
         style="position: absolute; top: 64px; bottom: 0; left: 0; right: 0;"
       >
@@ -344,7 +344,7 @@ function renderMenuLabel(option: any) {
         class="page-background"
         :class="{ 'bank-management-layout': route.name === 'bank-management', 'bing-background': bingBackground, 'bing-background-ready': bingReady, 'light-background': !themeStore.isDark }"
           :style="homeBackgroundStyle"
-          content-style="padding: 24px;"
+          content-style="padding: 24px; min-height: 100%; box-sizing: border-box; position: relative;"
           :native-scrollbar="false"
           style="position: absolute; top: 64px; bottom: 0; left: 0; right: 0;"
         >

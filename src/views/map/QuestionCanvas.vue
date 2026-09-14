@@ -7,6 +7,7 @@ import { loadCanvasData, type CanvasData } from '../../canvas/data'
 import { mountCanvas } from '../../canvas/engine'
 import { CARD_WIDTH } from '../../canvas/layout'
 import QuestionContent from '../../components/Question/QuestionContent.vue'
+import EmptyState from '../../components/EmptyState.vue'
 import '../../canvas/canvas.css'
 
 const route = useRoute()
@@ -105,8 +106,8 @@ onBeforeUnmount(() => { disposed = true; canvas?.destroy(); renderedCards.clear(
 <template>
   <div class="question-canvas-page" :style="tokens">
     <n-alert v-if="error" type="error" :title="error" style="margin: 12px 0" />
-    <n-empty v-if="ready && !data?.questions.size" description="该章节暂无题目" />
-    <n-spin :show="loading || (!ready && !error)" description="正在构建题目知识画布...">
+    <EmptyState v-if="ready && !data?.questions.size" />
+    <n-spin v-show="!ready || !!data?.questions.size" :show="loading || (!ready && !error)" description="正在构建题目知识画布...">
       <div ref="host" class="question-canvas-host" />
     </n-spin>
   </div>

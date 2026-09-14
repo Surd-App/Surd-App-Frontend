@@ -12,6 +12,7 @@ import QuestionBatchDialog from './QuestionBatchDialog.vue'
 import DirectoryJsonDialog from './DirectoryJsonDialog.vue'
 import { useRouter } from 'vue-router'
 import { ensureQuestionEntryRoute } from '../../router/questionEntry'
+import EmptyState from '../../components/EmptyState.vue'
 
 const router = useRouter()
 const openingEntry = ref(false)
@@ -495,11 +496,7 @@ onMounted(loadBank)
         </n-card>
       </div>
 
-      <n-empty
-        v-else-if="!loading && !error"
-        class="empty-bank"
-        description="暂无题库，请先导入或选择题库"
-      />
+      <EmptyState v-else-if="!loading && !error" />
     </n-spin>
 
     <QuestionEditorDialog

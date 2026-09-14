@@ -4,7 +4,6 @@ import type { Question, UserQuestionState } from '../../api/types'
 import { 
   Video24Regular, 
   Note24Regular, 
-  ErrorCircle24Regular,
   Heart24Regular,
   Heart24Filled,
   Checkmark24Regular,
@@ -13,10 +12,9 @@ import {
 } from '@vicons/fluent'
 import QuestionContent from './QuestionContent.vue'
 import LatexRender from '../Latex/LatexRender.vue'
-import { toggleFavorite as apiToggleFavorite, toggleWrongBook as apiToggleWrongBook, toggleMastered as apiToggleMastered, saveQuestionNote, submitQuestionFeedback } from '../../api/question'
+import { toggleFavorite as apiToggleFavorite, toggleWrongBook as apiToggleWrongBook, toggleMastered as apiToggleMastered, saveQuestionNote } from '../../api/question'
 import { useMessage } from 'naive-ui'
 import NoteModal from '../Interaction/NoteModal.vue'
-import FeedbackModal from '../Interaction/FeedbackModal.vue'
 import { useCategoryStore } from '../../store/category'
 import { useMobile } from '../../utils/responsive'
 
@@ -47,9 +45,6 @@ const loadingMastered = ref(false)
 
 const showNoteModal = ref(false)
 const savingNote = ref(false)
-
-const showFeedbackModal = ref(false)
-const submittingFeedback = ref(false)
 
 // 响应式路径逻辑
 const pathWrapperRef = ref<HTMLElement | null>(null)
@@ -144,23 +139,6 @@ const handleSaveNote = async (note: string) => {
 const handleVideo = () => {
   if (props.question.video_url) {
     window.open(props.question.video_url, '_blank')
-  }
-}
-
-const handleFeedback = () => {
-  showFeedbackModal.value = true
-}
-
-const handleSubmitFeedback = async (type: string, content: string) => {
-  submittingFeedback.value = true
-  try {
-    await submitQuestionFeedback(props.question.id, type, content)
-    message.success('感谢您的反馈，我们会尽快核实')
-    showFeedbackModal.value = false
-  } catch (error) {
-    message.error(error instanceof Error ? error.message : '反馈提交失败，请重试')
-  } finally {
-    submittingFeedback.value = false
   }
 }
 
@@ -360,10 +338,6 @@ const toggleAnalysis = () => {
               <template #icon><n-icon><Video24Regular /></n-icon></template>
               Surd 无理视频
             </n-button>
-            <n-button size="medium" secondary style="flex: 1;" @click="handleFeedback">
-              <template #icon><n-icon><ErrorCircle24Regular /></n-icon></template>
-              纠错
-            </n-button>
           </n-flex>
         </n-space>
       </template>
@@ -392,12 +366,6 @@ const toggleAnalysis = () => {
               <n-icon><Video24Regular /></n-icon>
             </template>
             Surd 无理视频
-          </n-button>
-          <n-button size="medium" secondary @click="handleFeedback">
-            <template #icon>
-              <n-icon><ErrorCircle24Regular /></n-icon>
-            </template>
-            纠错
           </n-button>
         </n-flex>
       </template>
@@ -437,10 +405,5 @@ const toggleAnalysis = () => {
       @save="handleSaveNote"
     />
 
-    <FeedbackModal
-      v-model:show="showFeedbackModal"
-      :loading="submittingFeedback"
-      @submit="handleSubmitFeedback"
-    />
   </n-card>
 </template>

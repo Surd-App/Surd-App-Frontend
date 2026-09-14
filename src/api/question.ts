@@ -40,9 +40,6 @@ export async function saveQuestionNote(id: number, note: string) {
   await updateState(id, state => { state.note = note; });
   return { message: '笔记已保存到本地' };
 }
-export async function submitQuestionFeedback(_id: number, _type: string, _content: string): Promise<void> {
-  throw new Error('静态题库暂不支持提交纠错');
-}
 export async function getWrongQuestions(perPage = 10000) {
   return paginate((await localQuestions()).filter(q => q.user_state.is_wrong_book), 1, perPage);
 }

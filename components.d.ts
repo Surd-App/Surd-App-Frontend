@@ -16,7 +16,6 @@ declare module 'vue' {
     DataManagement: typeof import('./src/components/Interaction/DataManagement.vue')['default']
     DeepLevelItem: typeof import('./src/components/Category/DeepLevelItem.vue')['default']
     EmptyState: typeof import('./src/components/EmptyState.vue')['default']
-    FeedbackModal: typeof import('./src/components/Interaction/FeedbackModal.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     LatexRender: typeof import('./src/components/Latex/LatexRender.vue')['default']
     MasteryHeatmap: typeof import('./src/components/Home/MasteryHeatmap.vue')['default']

@@ -296,7 +296,13 @@ const practiceCategories = computed(() => {
 }
 
 .mastery-progress-panel {
+  display: flex;
+  flex-direction: column;
   padding-right: 24px;
+}
+
+.mastery-progress-panel .rings-panel {
+  flex: 1;
 }
 
 .resume-panel {

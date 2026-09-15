@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { Category } from '../api/types';
-import { downloadBank, readBank, readStates, type LocalBank } from '../utils/questionBank';
+import { downloadBank, readBank, readStates, type BankImportConflictStrategy, type LocalBank } from '../utils/questionBank';
 
 export interface CategoryMeta {
   syncTime: number;
@@ -65,7 +65,7 @@ export const useCategoryStore = defineStore('category', {
       if (bank) await this.loadBank(bank);
       this.initialized = true;
     },
-    async fetchAndSync(url: string, name: string) {
+    async fetchAndSync(url: string, name: string, conflictStrategy?: BankImportConflictStrategy) {
       if (this.loading) return;
       this.loading = true;
       this.syncProgress = 0;
@@ -73,7 +73,7 @@ export const useCategoryStore = defineStore('category', {
         const bank = await downloadBank(url, (percent, status) => {
           this.syncProgress = percent;
           this.syncStatus = status;
-        }, name);
+        }, name, conflictStrategy);
         await this.loadBank(bank);
         this.initialized = true;
       } finally {

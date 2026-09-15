@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useCategoryStore } from '../../store/category'
 import { useMobile } from '../../utils/responsive'
-import { listBanks } from '../../utils/questionBank'
+import { BankAlreadyExistsError, type BankImportConflictStrategy } from '../../utils/questionBank'
 
 const categoryStore = useCategoryStore()
 const { isMobile } = useMobile()
@@ -12,33 +12,34 @@ const serverUrl = ref('')
 const bankName = ref('')
 const error = ref('')
 const overwritePending = ref(false)
+const existingBankId = ref('')
 watch(() => categoryStore.showSync, show => {
   if (show) {
     serverUrl.value = categoryStore.sourceUrl || 'http://localhost:5000'
     bankName.value = categoryStore.bankName
     error.value = ''
+    overwritePending.value = false
+    existingBankId.value = ''
   }
 })
 async function startSync() {
   if (categoryStore.loading) return
-  try {
-    const { banks } = await listBanks()
-    overwritePending.value = banks.some(bank => bank.name.trim() === bankName.value.trim())
-    if (overwritePending.value) return
-  } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '无法读取本地题库列表'
-    return
-  }
   await sync()
 }
 
-async function sync() {
+async function sync(conflictStrategy?: BankImportConflictStrategy) {
   error.value = ''
   try {
-    await categoryStore.fetchAndSync(serverUrl.value, bankName.value)
+    await categoryStore.fetchAndSync(serverUrl.value, bankName.value, conflictStrategy)
+    overwritePending.value = false
     message.success(`在线题库导入完成，共 ${categoryStore.meta?.totalQuestions ?? 0} 道题目`)
     categoryStore.showSync = false
   } catch (reason) {
+    if (reason instanceof BankAlreadyExistsError) {
+      existingBankId.value = reason.bankId
+      overwritePending.value = true
+      return
+    }
     error.value = reason instanceof Error ? reason.message : '导入失败，请检查服务器地址和网络'
   }
 }
@@ -69,8 +70,31 @@ async function sync() {
       </n-space>
     </n-card>
   </n-modal>
-  <n-modal v-model:show="overwritePending" preset="dialog" type="warning" title="题库名称已存在"
-    content="使用相同名称导入会覆盖已有题库，是否继续？" positive-text="继续覆盖" negative-text="取消"
-    :positive-button-props="{ loading: categoryStore.loading }"
-    @positive-click="sync" />
+  <n-modal
+    v-model:show="overwritePending"
+    preset="card"
+    title="当前导入题库已经存在"
+    style="width: min(500px, calc(100vw - 32px))"
+    :closable="!categoryStore.loading"
+    :mask-closable="!categoryStore.loading"
+    :close-on-esc="!categoryStore.loading"
+  >
+    <n-space vertical :size="16">
+      <n-alert type="warning">
+        ID 为 <n-text code>{{ existingBankId }}</n-text> 的题库已存在。覆盖会替换现有题库内容并保留该题库的个人题目状态；创建新题库会使用当前时间戳作为新 ID，个人题目状态相互独立。
+      </n-alert>
+      <n-alert v-if="error" type="error">{{ error }}</n-alert>
+    </n-space>
+    <template #footer>
+      <n-flex justify="end" :size="8">
+        <n-button :disabled="categoryStore.loading" @click="overwritePending = false">取消</n-button>
+        <n-button :loading="categoryStore.loading" :disabled="categoryStore.loading" @click="sync('create')">
+          创建新题库
+        </n-button>
+        <n-button type="primary" :loading="categoryStore.loading" :disabled="categoryStore.loading" @click="sync('overwrite')">
+          覆盖现有题库
+        </n-button>
+      </n-flex>
+    </template>
+  </n-modal>
 </template>

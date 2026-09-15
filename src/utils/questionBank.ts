@@ -35,6 +35,18 @@ export interface LocalBank {
   syncTime: number;
 }
 
+export type BankImportConflictStrategy = 'overwrite' | 'create';
+
+export class BankAlreadyExistsError extends Error {
+  readonly bankId: string;
+
+  constructor(bankId: string) {
+    super('当前导入的题库已经存在');
+    this.name = 'BankAlreadyExistsError';
+    this.bankId = bankId;
+  }
+}
+
 // Published snapshots are replaced after successful writes, never mutated in place.
 let bankSnapshot: Promise<LocalBank | null> | undefined;
 const bankChanges = typeof BroadcastChannel === 'undefined' ? undefined : new BroadcastChannel('daguan-bank-changes');
@@ -85,9 +97,7 @@ async function saveBank(bank: LocalBank) {
 export async function createLocalBank(input: string): Promise<LocalBank> {
   const name = input.trim();
   if (!name) throw new Error('请输入题库名称');
-  const { banks } = await listBanks();
-  if (banks.some(bank => bank.name.trim() === name)) throw new Error('题库名称已存在，请使用其他名称');
-  const id = `local:${Date.now()}`;
+  const id = String(Date.now());
   const bank: LocalBank = {
     displayName: name,
     manifest: {
@@ -475,7 +485,12 @@ export async function updateState(id: number, change: (state: UserQuestionState)
   });
 }
 
-export async function downloadBank(input: string, progress: (percent: number, status: string) => void, name: string) {
+export async function downloadBank(
+  input: string,
+  progress: (percent: number, status: string) => void,
+  name: string,
+  conflictStrategy?: BankImportConflictStrategy,
+) {
   if (!name.trim()) throw new Error('请输入题库名称');
   const base = new URL(input.trim());
   if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password) {
@@ -497,15 +512,11 @@ export async function downloadBank(input: string, progress: (percent: number, st
       !Array.isArray(manifest.chunks?.categories) || !Array.isArray(manifest.chunks?.questions)) {
     throw new Error('不支持的题库清单格式');
   }
-  // A matching display name intentionally replaces the existing saved entry.
-  const existing = await listBanks();
-  const sameName = existing.banks.find(bank => bank.name.trim() === name.trim());
-  if (sameName) {
-    manifest.questionBank.id = sameName.id;
-  } else {
-    // The same online bank can be saved under multiple local names.
-    const baseId = manifest.questionBank.id;
-    manifest.questionBank.id = `local:${baseId}:${encodeURIComponent(name.trim())}`;
+  const manifestId = manifest.questionBank.id;
+  const { banks } = await listBanks();
+  if (banks.some(bank => bank.id === manifestId)) {
+    if (!conflictStrategy) throw new BankAlreadyExistsError(manifestId);
+    if (conflictStrategy === 'create') manifest.questionBank.id = String(Date.now());
   }
   const total = manifest.chunks.categories.length + manifest.chunks.questions.length;
   let completed = 0;

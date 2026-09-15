@@ -2,8 +2,8 @@ let database: Promise<IDBDatabase> | undefined;
 
 export function openDatabase(): Promise<IDBDatabase> {
   return database ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open('daguan-question-bank', 3);
-    request.onupgradeneeded = () => {
+    const request = indexedDB.open('daguan-question-bank', 4);
+    request.onupgradeneeded = event => {
       const db = request.result;
       for (const name of ['bank', 'bankCatalog', 'states', 'settings']) {
         if (!db.objectStoreNames.contains(name)) db.createObjectStore(name);
@@ -23,6 +23,35 @@ export function openDatabase(): Promise<IDBDatabase> {
           questionCount: bank.questions.length, syncTime: bank.syncTime, sourceUrl: bank.sourceUrl }, id);
         tx.objectStore('settings').put({ version: 1, bankId: id }, 'currentBank');
       };
+      if ((event as IDBVersionChangeEvent).oldVersion < 4) {
+        const settingsStore = tx.objectStore('settings');
+        const statesStore = tx.objectStore('states');
+        const currentBank = settingsStore.get('currentBank');
+        currentBank.onsuccess = () => {
+          const bankId = currentBank.result?.bankId;
+          if (!bankId) return;
+          const bankRequest = bankStore.get(bankId);
+          bankRequest.onsuccess = () => {
+            const bank = bankRequest.result;
+            const legacyKey = bank?.manifest?.questionBank?.subjectCode;
+            if (!legacyKey) return;
+            const stateKey = `bank:${bankId}`;
+            const existingState = statesStore.get(stateKey);
+            existingState.onsuccess = () => {
+              if (existingState.result !== undefined) {
+                statesStore.delete(legacyKey);
+                return;
+              }
+              const legacyState = statesStore.get(legacyKey);
+              legacyState.onsuccess = () => {
+                if (legacyState.result === undefined) return;
+                statesStore.put(legacyState.result, stateKey);
+                statesStore.delete(legacyKey);
+              };
+            };
+          };
+        };
+      }
     };
     request.onsuccess = () => {
       const db = request.result;

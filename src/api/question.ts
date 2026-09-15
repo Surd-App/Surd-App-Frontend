@@ -4,7 +4,7 @@ import { emptyState, readBank, readStates, updateState } from '../utils/question
 async function localQuestions(categoryId?: number): Promise<Question[]> {
   const bank = await readBank();
   if (!bank) return [];
-  const states = await readStates(bank.manifest.questionBank.subjectCode);
+  const states = await readStates(bank.manifest.questionBank.id);
   let selected: Set<number> | undefined;
   if (categoryId !== undefined) {
     selected = new Set<number>();

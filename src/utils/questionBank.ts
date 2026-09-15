@@ -417,12 +417,14 @@ export async function selectBank(id: string): Promise<void> {
 export async function deleteBank(id: string): Promise<void> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(['bank', 'bankCatalog', 'settings'], 'readwrite');
+    const tx = db.transaction(['bank', 'bankCatalog', 'states', 'settings'], 'readwrite');
     const current = tx.objectStore('settings').get('currentBank');
     current.onsuccess = () => {
       if (current.result?.bankId === id) { tx.abort(); return; }
       tx.objectStore('bank').delete(id);
       tx.objectStore('bankCatalog').delete(id);
+      tx.objectStore('states').delete(`bank:${id}`);
+      tx.objectStore('settings').delete(`lastPractice:${id}`);
     };
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -432,10 +434,10 @@ export async function deleteBank(id: string): Promise<void> {
 export const emptyState = (): UserQuestionState => ({
   is_favorite: false, is_wrong_book: false, is_mastered: false, mastered_at: null, note: '',
 });
-export async function readStates(subject: string): Promise<Record<number, UserQuestionState>> {
+export async function readStates(bankId: string): Promise<Record<number, UserQuestionState>> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const request = db.transaction('states').objectStore('states').get(subject);
+    const request = db.transaction('states').objectStore('states').get(`bank:${bankId}`);
     request.onsuccess = () => resolve(request.result ?? {});
     request.onerror = () => reject(request.error);
   });
@@ -447,7 +449,7 @@ export async function updateState(id: number, change: (state: UserQuestionState)
   return new Promise<UserQuestionState>((resolve, reject) => {
     const tx = db.transaction('states', 'readwrite');
     const store = tx.objectStore('states');
-    const key = bank.manifest.questionBank.subjectCode;
+    const key = `bank:${bank.manifest.questionBank.id}`;
     const request = store.get(key);
     let state: UserQuestionState;
     request.onsuccess = () => {
@@ -496,8 +498,7 @@ export async function downloadBank(input: string, progress: (percent: number, st
   } else {
     // The same online bank can be saved under multiple local names.
     const baseId = manifest.questionBank.id;
-    const uniqueId = Date.now();
-    manifest.questionBank.id = `local:${baseId}:${uniqueId}`;
+    manifest.questionBank.id = `local:${baseId}:${encodeURIComponent(name.trim())}`;
   }
   const total = manifest.chunks.categories.length + manifest.chunks.questions.length;
   let completed = 0;

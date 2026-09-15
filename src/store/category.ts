@@ -24,7 +24,7 @@ export const useCategoryStore = defineStore('category', {
   }),
   actions: {
     async loadBank(bank: LocalBank) {
-      const states = await readStates(bank.manifest.questionBank.subjectCode);
+      const states = await readStates(bank.manifest.questionBank.id);
       const nodes = new Map<number, Category>();
       for (const category of bank.categories) {
         const completed = category.questionIds.filter(id => states[id]?.is_mastered).length;

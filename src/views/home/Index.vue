@@ -46,7 +46,7 @@ async function loadHome() {
     await categoryStore.initialize()
     const nextBank = await readBank()
     const nextStates = nextBank
-      ? await readStates(nextBank.manifest.questionBank.subjectCode)
+      ? await readStates(nextBank.manifest.questionBank.id)
       : {}
     bank.value = nextBank
     states.value = nextStates

@@ -8,7 +8,7 @@ export async function loadCanvasData(categoryId: number): Promise<CanvasData> {
   const byId = new Map(bank.categories.map(c => [c.id, c]))
   const root = byId.get(categoryId)
   if (!root) throw new Error('该章节不存在，请返回卡片地图重新选择')
-  const states = await readStates(bank.manifest.questionBank.subjectCode)
+  const states = await readStates(bank.manifest.questionBank.id)
   const children = new Map<number, typeof bank.categories>()
   for (const category of bank.categories) {
     if (category.parentId === null) continue

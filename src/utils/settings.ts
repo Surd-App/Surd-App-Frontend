@@ -1,4 +1,5 @@
 import { openDatabase } from './database';
+import { notifyGitHubSyncDataChanged } from './githubSync';
 
 /** settings/personalization is device-wide, independent of the active question bank. */
 export interface PersonalizationSettings {
@@ -29,7 +30,10 @@ export async function savePersonalization(settings: PersonalizationSettings): Pr
   return new Promise((resolve, reject) => {
     const tx = db.transaction('settings', 'readwrite');
     tx.objectStore('settings').put(settings, 'personalization');
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => {
+      notifyGitHubSyncDataChanged();
+      resolve();
+    };
     tx.onabort = () => reject(tx.error ?? new Error('背景设置保存失败'));
     tx.onerror = () => reject(tx.error);
   });

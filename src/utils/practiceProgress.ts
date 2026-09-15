@@ -1,4 +1,5 @@
 import { openDatabase } from './database';
+import { notifyGitHubSyncDataChanged } from './githubSync';
 
 export interface LastPracticeProgress {
   version: 1;
@@ -31,7 +32,10 @@ export async function saveLastPracticeProgress(
   return new Promise((resolve, reject) => {
     const tx = db.transaction('settings', 'readwrite');
     tx.objectStore('settings').put(value, progressKey(progress.bankId));
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => {
+      notifyGitHubSyncDataChanged();
+      resolve();
+    };
     tx.onabort = () => reject(tx.error ?? new Error('练习进度保存失败'));
     tx.onerror = () => reject(tx.error);
   });

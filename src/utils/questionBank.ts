@@ -1,4 +1,5 @@
 import { openDatabase } from './database';
+import { notifyGitHubSyncDataChanged } from './githubSync';
 import type { UserQuestionState } from '../api/types';
 import { directorySignature, mergeDirectory, parseDirectoryJson } from './categoryJson';
 
@@ -426,7 +427,10 @@ export async function deleteBank(id: string): Promise<void> {
       tx.objectStore('states').delete(`bank:${id}`);
       tx.objectStore('settings').delete(`lastPractice:${id}`);
     };
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => {
+      notifyGitHubSyncDataChanged();
+      resolve();
+    };
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error ?? new Error('当前题库不能删除'));
   });
@@ -462,7 +466,10 @@ export async function updateState(id: number, change: (state: UserQuestionState)
       states[id] = state;
       store.put(states, key);
     };
-    tx.oncomplete = () => resolve(state);
+    tx.oncomplete = () => {
+      notifyGitHubSyncDataChanged();
+      resolve(state);
+    };
     tx.onabort = () => reject(tx.error ?? new Error('本地记录保存失败'));
     tx.onerror = () => reject(tx.error);
   });

@@ -10,6 +10,10 @@ import {
   Star24Regular,
   Book24Regular,
   CloudArrowDown24Regular,
+  CloudArrowUp24Regular,
+  Cloud24Regular,
+  CloudSync24Regular,
+  CloudDismiss24Regular,
   Navigation24Regular,
   Map24Regular,
   Settings24Regular,
@@ -24,6 +28,7 @@ import { useMessage } from 'naive-ui'
 import SyncModal from '../components/Interaction/SyncModal.vue'
 import BankSwitcher from '../components/Interaction/BankSwitcher.vue'
 import { listBanks } from '../utils/questionBank'
+import { useGitHubSyncStore } from '../store/githubSync'
 
 const router = useRouter()
 const route = useRoute()
@@ -60,12 +65,25 @@ const homeBackgroundStyle = computed(() => {
 const categoryStore = useCategoryStore()
 const { isMobile } = useMobile()
 const message = useMessage()
+const githubSyncStore = useGitHubSyncStore()
+const syncIcon = computed(() => {
+  if (githubSyncStore.status === 'uploading' || githubSyncStore.status === 'pending') return CloudArrowUp24Regular
+  if (githubSyncStore.status === 'downloading') return CloudArrowDown24Regular
+  if (githubSyncStore.status === 'error' || githubSyncStore.status === 'attention') return CloudDismiss24Regular
+  return githubSyncStore.enabled ? CloudSync24Regular : Cloud24Regular
+})
+const syncIconColor = computed(() => {
+  if (githubSyncStore.status === 'error') return 'var(--n-error-color)'
+  if (githubSyncStore.status === 'attention') return 'var(--n-warning-color)'
+  return undefined
+})
 
 const showMobileMenu = ref(false)
 const collapsed = ref(false)
 
 onMounted(async () => {
   void settingsStore.initialize().catch(error => message.error(error instanceof Error ? error.message : '背景设置加载失败'))
+  void githubSyncStore.initialize()
   if (!localStorage.getItem('theme')) {
     const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     themeStore.setTheme(isSystemDark)
@@ -235,6 +253,17 @@ function renderMenuLabel(option: any) {
           </n-flex>
           <n-flex align="center" :wrap="false">
             <BankSwitcher />
+            <n-button
+              v-if="githubSyncStore.enabled"
+              quaternary
+              circle
+              size="large"
+              aria-label="GitHub 云同步状态"
+              :title="githubSyncStore.error || (githubSyncStore.status === 'attention' ? '发现云端新数据，等待处理' : githubSyncStore.status === 'uploading' ? '正在上传同步数据' : githubSyncStore.status === 'downloading' ? '正在下载同步数据' : githubSyncStore.status === 'merging' ? '正在合并同步数据' : githubSyncStore.status === 'pending' ? '等待上传同步数据' : '云同步已完成')"
+              @click="githubSyncStore.syncNow"
+            >
+              <template #icon><n-icon :class="{ 'sync-uploading': githubSyncStore.status === 'uploading' }" :color="syncIconColor"><component :is="syncIcon" /></n-icon></template>
+            </n-button>
             <n-button quaternary circle size="large" aria-label="导入在线题库" title="导入在线题库" @click="handleSyncCloud">
               <template #icon>
                 <n-icon><CloudArrowDown24Regular /></n-icon>
@@ -325,6 +354,17 @@ function renderMenuLabel(option: any) {
             </n-breadcrumb>
             <n-flex align="center">
               <BankSwitcher />
+              <n-button
+                v-if="githubSyncStore.enabled"
+                quaternary
+                circle
+                size="large"
+                aria-label="GitHub 云同步状态"
+                :title="githubSyncStore.error || (githubSyncStore.status === 'attention' ? '发现云端新数据，等待处理' : githubSyncStore.status === 'uploading' ? '正在上传同步数据' : githubSyncStore.status === 'downloading' ? '正在下载同步数据' : githubSyncStore.status === 'merging' ? '正在合并同步数据' : githubSyncStore.status === 'pending' ? '等待上传同步数据' : '云同步已完成')"
+                @click="githubSyncStore.syncNow"
+              >
+                <template #icon><n-icon :class="{ 'sync-uploading': githubSyncStore.status === 'uploading' }" :color="syncIconColor"><component :is="syncIcon" /></n-icon></template>
+              </n-button>
               <n-button quaternary circle size="large" aria-label="导入在线题库" title="导入在线题库" @click="handleSyncCloud">
                 <template #icon>
                   <n-icon><CloudArrowDown24Regular /></n-icon>
@@ -355,6 +395,44 @@ function renderMenuLabel(option: any) {
   </template>
 
   <SyncModal />
+
+  <n-modal
+    :show="githubSyncStore.remoteChangePending"
+    preset="card"
+    title="发现云端新数据"
+    style="width: min(520px, calc(100vw - 32px));"
+    :mask-closable="false"
+    :close-on-esc="false"
+  >
+    <n-space vertical :size="16">
+      <n-alert v-if="githubSyncStore.error" type="error" title="同步失败">
+        {{ githubSyncStore.error }}
+      </n-alert>
+      <n-alert type="warning" title="请选择本次同步方向">
+        GitHub 中的同步文件已在其他设备上更新。继续前请选择保留云端数据或当前设备的本地数据。
+      </n-alert>
+      <n-text depth="3">题库不会参与同步，也不会被此次操作修改。</n-text>
+    </n-space>
+    <template #footer>
+      <n-flex justify="end" :size="8">
+        <n-button
+          :disabled="githubSyncStore.phase !== 'idle'"
+          :loading="githubSyncStore.phase === 'uploading'"
+          @click="githubSyncStore.resolveRemoteChange('local')"
+        >
+          本地覆盖云端
+        </n-button>
+        <n-button
+          type="primary"
+          :disabled="githubSyncStore.phase !== 'idle'"
+          :loading="githubSyncStore.phase === 'downloading'"
+          @click="githubSyncStore.resolveRemoteChange('cloud')"
+        >
+          云端覆盖本地
+        </n-button>
+      </n-flex>
+    </template>
+  </n-modal>
 
   <n-drawer class="navigation-surface" v-model:show="showMobileMenu" :width="280" placement="left">
     <n-drawer-content title="Surd 无理" closable>
@@ -423,6 +501,15 @@ function renderMenuLabel(option: any) {
   bottom: 0;
   left: 0;
   z-index: 20;
+}
+
+.sync-uploading {
+  animation: sync-upload 900ms ease-in-out infinite;
+}
+
+@keyframes sync-upload {
+  0%, 100% { transform: translateY(1px); }
+  50% { transform: translateY(-2px); }
 }
 
 </style>

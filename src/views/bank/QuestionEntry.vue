@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
-import { ColorWandOutline } from '@vicons/ionicons5'
+import ColorWandOutline from '@vicons/ionicons5/es/ColorWandOutline'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { createBankQuestion, readBank, type LocalBank, type QuestionEdit } from '../../utils/questionBank'

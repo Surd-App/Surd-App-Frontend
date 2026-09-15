@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown24Regular } from '@vicons/fluent'
+import ChevronDown24Regular from '@vicons/fluent/es/ChevronDown24Regular'
 import type { Category } from '../../api/types'
 import { useMobile } from '../../utils/responsive'
 

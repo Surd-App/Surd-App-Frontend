@@ -3,23 +3,22 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NIcon } from 'naive-ui'
-import {
-  Home24Regular,
-  List24Regular,
-  ClipboardError24Regular,
-  Star24Regular,
-  Book24Regular,
-  CloudArrowDown24Regular,
-  CloudArrowUp24Regular,
-  Cloud24Regular,
-  CloudSync24Regular,
-  CloudDismiss24Regular,
-  Navigation24Regular,
-  Map24Regular,
-  Settings24Regular,
-  Library24Regular,
-} from '@vicons/fluent'
-import { Moon, Sunny } from '@vicons/ionicons5'
+import Home24Regular from '@vicons/fluent/es/Home24Regular'
+import List24Regular from '@vicons/fluent/es/List24Regular'
+import ClipboardError24Regular from '@vicons/fluent/es/ClipboardError24Regular'
+import Star24Regular from '@vicons/fluent/es/Star24Regular'
+import Book24Regular from '@vicons/fluent/es/Book24Regular'
+import CloudArrowDown24Regular from '@vicons/fluent/es/CloudArrowDown24Regular'
+import CloudArrowUp24Regular from '@vicons/fluent/es/CloudArrowUp24Regular'
+import Cloud24Regular from '@vicons/fluent/es/Cloud24Regular'
+import CloudSync24Regular from '@vicons/fluent/es/CloudSync24Regular'
+import CloudDismiss24Regular from '@vicons/fluent/es/CloudDismiss24Regular'
+import Navigation24Regular from '@vicons/fluent/es/Navigation24Regular'
+import Map24Regular from '@vicons/fluent/es/Map24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Library24Regular from '@vicons/fluent/es/Library24Regular'
+import Moon from '@vicons/ionicons5/es/Moon'
+import Sunny from '@vicons/ionicons5/es/Sunny'
 import { useThemeStore } from '../store/theme'
 import { useSettingsStore } from '../store/settings'
 import { useCategoryStore } from '../store/category'

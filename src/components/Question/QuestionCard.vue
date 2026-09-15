@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import type { Question, UserQuestionState } from '../../api/types'
-import { 
-  Video24Regular, 
-  Note24Regular, 
-  Heart24Regular,
-  Heart24Filled,
-  Checkmark24Regular,
-  BookmarkMultiple24Regular,
-  BookmarkMultiple24Filled
-} from '@vicons/fluent'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
+import Note24Regular from '@vicons/fluent/es/Note24Regular'
+import Heart24Regular from '@vicons/fluent/es/Heart24Regular'
+import Heart24Filled from '@vicons/fluent/es/Heart24Filled'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import BookmarkMultiple24Regular from '@vicons/fluent/es/BookmarkMultiple24Regular'
+import BookmarkMultiple24Filled from '@vicons/fluent/es/BookmarkMultiple24Filled'
 import QuestionContent from './QuestionContent.vue'
 import LatexRender from '../Latex/LatexRender.vue'
 import { toggleFavorite as apiToggleFavorite, toggleWrongBook as apiToggleWrongBook, toggleMastered as apiToggleMastered, saveQuestionNote } from '../../api/question'

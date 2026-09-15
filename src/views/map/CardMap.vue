@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { useCategoryStore } from '../../store/category'
-import { Book24Regular } from '@vicons/fluent'
+import Book24Regular from '@vicons/fluent/es/Book24Regular'
 import EmptyState from '../../components/EmptyState.vue'
 
 

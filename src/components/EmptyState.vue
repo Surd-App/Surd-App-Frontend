@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NCard, NFlex, NIcon, NText, useThemeVars } from 'naive-ui'
-import { BoxDismiss24Regular } from '@vicons/fluent'
+import BoxDismiss24Regular from '@vicons/fluent/es/BoxDismiss24Regular'
 
 withDefaults(defineProps<{
   page?: boolean

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { NHeatmap, NScrollbar } from 'naive-ui'
-import { CalendarLtr24Regular } from '@vicons/fluent'
+import CalendarLtr24Regular from '@vicons/fluent/es/CalendarLtr24Regular'
 import { buildMasteryHeatmap } from '../../utils/masteryHeatmap'
 import { useMobile } from '../../utils/responsive'
 

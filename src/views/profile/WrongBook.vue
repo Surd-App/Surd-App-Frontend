@@ -5,7 +5,7 @@ import { getWrongQuestions } from '../../api/question'
 import type { Question } from '../../api/types'
 import QuestionCard from '../../components/Question/QuestionCard.vue'
 import EmptyState from '../../components/EmptyState.vue'
-import { ArrowCounterclockwise24Regular } from '@vicons/fluent'
+import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
 
 const message = useMessage()
 const questions = ref<Question[]>([])

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
-import { LogoGithub } from '@vicons/ionicons5'
+import LogoGithub from '@vicons/ionicons5/es/LogoGithub'
 import SettingCard from './SettingCard.vue'
 import { useSettingsStore } from '../../store/settings'
 import { useGitHubSyncStore } from '../../store/githubSync'

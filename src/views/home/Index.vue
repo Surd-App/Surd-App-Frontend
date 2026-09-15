@@ -5,6 +5,7 @@ import { useMobile } from '../../utils/responsive'
 import type { Notification, UserQuestionState } from '../../api/types'
 import AnnouncementModal from '../../components/Interaction/AnnouncementModal.vue'
 import upAvatar from '../../assets/chengxiaoyu-avatar.jpg'
+import makiAvatar from '../../assets/maki-avatar.jpg'
 import qrCode from '../../assets/qrcode.jpg'
 import MasteryOverview from '../../components/Home/MasteryOverview.vue'
 import { readBank, readStates, type LocalBank } from '../../utils/questionBank'
@@ -20,6 +21,18 @@ const states = shallowRef<Record<number, UserQuestionState>>({})
 const lastPractice = shallowRef<LastPracticeProgress | null>(null)
 const loading = ref(true)
 const loadError = ref('')
+const bilibiliCreators = [
+  {
+    name: 'Maki的完美算术教室',
+    avatar: makiAvatar,
+    url: 'https://space.bilibili.com/391930545',
+  },
+  {
+    name: '澄潇宇',
+    avatar: upAvatar,
+    url: 'https://space.bilibili.com/6536560',
+  },
+]
 
 const handleShowDetail = (anno: Notification) => {
   selectedAnno.value = anno
@@ -74,15 +87,28 @@ onMounted(loadHome)
       <n-grid :cols="1" :y-gap="12">
         <n-grid-item>
           <n-card title="Bilibili 推广" :segmented="{ content: true }">
-            <n-flex vertical align="center" :size="16">
-              <n-avatar round :size="64" :src="upAvatar" style="border: 2px solid var(--n-primary-color);" />
-              <n-flex vertical align="center" :size="4">
-                <n-gradient-text type="primary" :size="16" weight="bold">澄潇宇</n-gradient-text>
-              </n-flex>
-              <n-button type="primary" ghost round size="small" tag="a" href="https://space.bilibili.com/6536560" target="_blank">
-                前往关注
-              </n-button>
-            </n-flex>
+            <n-grid :cols="2" :x-gap="12">
+              <n-grid-item v-for="creator in bilibiliCreators" :key="creator.url">
+                <n-flex vertical align="center" :size="12" class="creator-profile">
+                  <n-avatar round :size="56" :src="creator.avatar" class="creator-avatar" />
+                  <n-gradient-text type="primary" :size="14" weight="bold" class="creator-name">
+                    {{ creator.name }}
+                  </n-gradient-text>
+                  <n-button
+                    type="primary"
+                    ghost
+                    round
+                    size="small"
+                    tag="a"
+                    :href="creator.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    前往关注
+                  </n-button>
+                </n-flex>
+              </n-grid-item>
+            </n-grid>
           </n-card>
         </n-grid-item>
 
@@ -123,18 +149,28 @@ onMounted(loadHome)
       <n-grid :cols="3" :x-gap="12" :y-gap="12">
         <n-grid-item>
           <n-card title="Bilibili 推广" :segmented="{ content: true }" style="height: 100%;">
-            <n-flex vertical align="center" :size="16">
-              <n-avatar round :size="80" :src="upAvatar" style="border: 2px solid var(--n-primary-color);" />
-              <n-flex vertical align="center" :size="4">
-                <n-gradient-text type="primary" :size="18" weight="bold">澄潇宇</n-gradient-text>
-              </n-flex>
-              <n-text depth="3" style="text-align: center; font-size: 13px;">
-                打破考研信息差，助你轻松备考
-              </n-text>
-              <n-button type="primary" ghost round tag="a" href="https://space.bilibili.com/6536560" target="_blank">
-                前往关注
-              </n-button>
-            </n-flex>
+            <n-grid :cols="2" :x-gap="16" style="height: 100%;">
+              <n-grid-item v-for="creator in bilibiliCreators" :key="creator.url">
+                <n-flex vertical align="center" justify="center" :size="14" class="creator-profile">
+                  <n-avatar round :size="64" :src="creator.avatar" class="creator-avatar" />
+                  <n-gradient-text type="primary" :size="15" weight="bold" class="creator-name">
+                    {{ creator.name }}
+                  </n-gradient-text>
+                  <n-button
+                    type="primary"
+                    ghost
+                    round
+                    size="small"
+                    tag="a"
+                    :href="creator.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    前往关注
+                  </n-button>
+                </n-flex>
+              </n-grid-item>
+            </n-grid>
           </n-card>
         </n-grid-item>
 
@@ -211,5 +247,26 @@ onMounted(loadHome)
 .home-content-ready {
   visibility: visible;
   opacity: 1;
+}
+
+.creator-profile {
+  height: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.creator-avatar {
+  flex-shrink: 0;
+  border: 2px solid var(--n-primary-color);
+}
+
+.creator-name {
+  display: -webkit-box;
+  min-height: 42px;
+  line-height: 21px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 </style>

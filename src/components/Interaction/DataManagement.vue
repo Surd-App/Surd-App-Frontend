@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue'
 import { useMessage } from 'naive-ui'
-import { ArrowDownload24Regular, ArrowUpload24Regular } from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowUpload24Regular from '@vicons/fluent/es/ArrowUpload24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
 import SettingCard from './SettingCard.vue'
 import type { UploadFileInfo } from 'naive-ui'
 import { exportBackup, parseBackup, restoreBackup } from '../../utils/backup'
 import type { LocalBackup } from '../../utils/backup'
+import { deleteAllIndexedDBData } from '../../utils/database'
 
 const message = useMessage()
 const exporting = ref(false)
@@ -13,7 +16,9 @@ const reading = ref(false)
 const importing = ref(false)
 const pending = shallowRef<LocalBackup | null>(null)
 const showConfirm = ref(false)
-const busy = computed(() => exporting.value || reading.value || importing.value)
+const clearConfirmStep = ref<0 | 1 | 2>(0)
+const clearing = ref(false)
+const busy = computed(() => exporting.value || reading.value || importing.value || clearing.value)
 const stateCount = computed(() => pending.value?.stores.states.reduce((sum, entry) => sum + Object.keys(entry.value).length, 0) ?? 0)
 
 async function download() {
@@ -55,6 +60,27 @@ async function restore() {
     importing.value = false
   }
 }
+
+function requestClear() {
+  clearConfirmStep.value = 1
+}
+
+async function confirmClear() {
+  if (clearConfirmStep.value === 1) {
+    clearConfirmStep.value = 2
+    return
+  }
+  if (clearConfirmStep.value !== 2 || clearing.value) return
+  clearing.value = true
+  try {
+    await deleteAllIndexedDBData()
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+    window.location.replace(`${base}/`)
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '本地数据删除失败')
+    clearing.value = false
+  }
+}
 </script>
 
 <template>
@@ -71,6 +97,11 @@ async function restore() {
         </n-upload>
       </template>
     </SettingCard>
+    <SettingCard title="清空所有数据" description="永久删除当前浏览器中的全部题库、个人题目状态、设置和云同步凭据。" :icon="Delete24Regular">
+      <template #actions>
+        <n-button type="error" secondary :disabled="busy" @click="requestClear">清空所有数据</n-button>
+      </template>
+    </SettingCard>
   </n-list>
   <n-modal v-model:show="showConfirm" preset="card" title="确认导入备份" style="width: min(480px, calc(100vw - 32px))" :closable="!importing" :mask-closable="!importing" :close-on-esc="!importing">
     <n-space v-if="pending" vertical :size="16">
@@ -82,6 +113,33 @@ async function restore() {
         <n-button type="primary" :loading="importing" :disabled="importing" @click="restore">确认导入并刷新</n-button>
       </n-flex>
     </n-space>
+  </n-modal>
+  <n-modal
+    :show="clearConfirmStep > 0"
+    preset="card"
+    :title="clearConfirmStep === 1 ? '确认清空所有数据' : '再次确认永久删除'"
+    style="width: min(500px, calc(100vw - 32px))"
+    :closable="!clearing"
+    :mask-closable="!clearing"
+    :close-on-esc="!clearing"
+    @update:show="!$event && !clearing && (clearConfirmStep = 0)"
+  >
+    <n-space vertical :size="16">
+      <n-alert v-if="clearConfirmStep === 1" type="warning" title="此操作会删除当前浏览器中的全部应用数据">
+        包括所有题库、个人题目状态、练习进度、背景设置、GitHub Token 和云同步配置。删除后无法撤销。
+      </n-alert>
+      <n-alert v-else type="error" title="这是最后一次确认">
+        全部 IndexedDB 数据将被永久删除。请确认已经导出需要保留的数据；删除完成后应用会返回首页并重新初始化。
+      </n-alert>
+    </n-space>
+    <template #footer>
+      <n-flex justify="end" :size="8">
+        <n-button :disabled="clearing" @click="clearConfirmStep = 0">取消</n-button>
+        <n-button type="error" :loading="clearing" :disabled="clearing" @click="confirmClear">
+          {{ clearConfirmStep === 1 ? '继续' : '永久删除全部数据' }}
+        </n-button>
+      </n-flex>
+    </template>
   </n-modal>
 </template>
 

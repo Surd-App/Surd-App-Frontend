@@ -1,8 +1,9 @@
 let database: Promise<IDBDatabase> | undefined;
+const DATABASE_NAME = 'daguan-question-bank';
 
 export function openDatabase(): Promise<IDBDatabase> {
   return database ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open('daguan-question-bank', 4);
+    const request = indexedDB.open(DATABASE_NAME, 4);
     request.onupgradeneeded = event => {
       const db = request.result;
       for (const name of ['bank', 'bankCatalog', 'states', 'settings']) {
@@ -67,5 +68,23 @@ export function openDatabase(): Promise<IDBDatabase> {
       reject(new Error('请关闭其他打开的 Surd 无理页面后刷新，以完成本地存储升级'));
       request.onsuccess = () => request.result.close();
     };
+  });
+}
+
+export async function deleteAllIndexedDBData(): Promise<void> {
+  const current = database;
+  database = undefined;
+  if (current) {
+    try {
+      (await current).close();
+    } catch {
+      // A failed open request does not leave a connection to close.
+    }
+  }
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DATABASE_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error ?? new Error('本地数据删除失败'));
+    request.onblocked = () => reject(new Error('请关闭其他打开的 Surd 无理页面后重试'));
   });
 }

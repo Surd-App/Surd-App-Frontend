@@ -77,6 +77,12 @@ export function parseBackup(text: string): LocalBackup {
       requireValid(value.version === 1 && typeof value.bankId === 'string' && value.bankId.trim().length > 0);
       continue;
     }
+    if (key.startsWith('lastPractice:')) {
+      requireValid(value.version === 1 && typeof value.bankId === 'string' && key === `lastPractice:${value.bankId}`);
+      requireValid([value.categoryId, value.questionId, value.questionNumber, value.updatedAt]
+        .every(item => Number.isInteger(item) && item > 0));
+      continue;
+    }
     requireValid(key === 'personalization' && value.version === 1);
     const bg = value.background;
     requireValid(bg && ['solid', 'image', 'bing'].includes(bg.type) && typeof bg.imageName === 'string');

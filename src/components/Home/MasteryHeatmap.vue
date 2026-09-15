@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { NHeatmap, NScrollbar } from 'naive-ui'
+import { CalendarLtr24Regular } from '@vicons/fluent'
 import { buildMasteryHeatmap } from '../../utils/masteryHeatmap'
 import { useMobile } from '../../utils/responsive'
 
@@ -49,7 +50,10 @@ watch(calendarColumns, columns => emit('preferredWidth', columns * 13 + 48), { i
 <template>
   <div ref="heatmapElement" class="mastery-heatmap">
     <div class="heatmap-toolbar">
-      <n-text strong>完成热力图</n-text>
+      <n-flex align="center" :size="6">
+        <n-icon size="18"><CalendarLtr24Regular /></n-icon>
+        <n-text strong>完成热力图</n-text>
+      </n-flex>
       <n-select v-model:value="range" :options="yearOptions" size="small" style="width: 120px" aria-label="热力图日期范围" />
     </div>
       <n-empty v-if="!hasBank" description="暂无题目" />

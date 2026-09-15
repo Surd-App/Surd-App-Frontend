@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import MasteryHeatmap from './MasteryHeatmap.vue'
 import { NScrollbar, NTab, NTabs, useThemeVars } from 'naive-ui'
-import { Rocket24Regular, History24Regular, Target24Regular, Star24Regular } from '@vicons/fluent'
+import { ArrowRight24Regular, History24Regular, Rocket24Regular, Target24Regular, Star24Regular } from '@vicons/fluent'
 import { useCategoryStore } from '../../store/category'
 import type { UserQuestionState } from '../../api/types'
 import type { LocalBank } from '../../utils/questionBank'
 import { collectMasteryDates } from '../../utils/masteryHeatmap'
+import type { LastPracticeProgress } from '../../utils/practiceProgress'
 
 const props = defineProps<{
   bank: LocalBank | null
   states: Record<number, UserQuestionState>
+  lastPractice: LastPracticeProgress | null
 }>()
 
+const router = useRouter()
 const categoryStore = useCategoryStore()
 const themeVars = useThemeVars()
 const heatmapWidth = ref(0)
@@ -91,6 +95,44 @@ const statsData = computed(() => [
   { label: '待练习', value: masteryTotal.value - masteryCount.value, icon: Target24Regular, color: '#f0a020' },
   { label: '完成章节', value: completedSections.value, icon: Star24Regular, color: '#8a63d2' },
 ])
+const lastPracticeCategory = computed(() => props.lastPractice
+  ? categoryStore.getCategoryData(props.lastPractice.categoryId)
+  : null)
+const lastPracticeQuestion = computed(() => props.lastPractice
+  ? props.bank?.questions.find(question => question.id === props.lastPractice?.questionId)
+  : null)
+const canResume = computed(() => !!props.lastPractice && !!lastPracticeCategory.value && !!lastPracticeQuestion.value)
+const lastPracticeTime = computed(() => props.lastPractice
+  ? new Date(props.lastPractice.updatedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  : '')
+const lastPracticeTotal = computed(() => lastPracticeCategory.value?.total_question_count ?? 0)
+const lastPracticePosition = computed(() => Math.min(props.lastPractice?.questionNumber ?? 0, lastPracticeTotal.value))
+const lastPracticeRate = computed(() => lastPracticeTotal.value
+  ? Math.round(lastPracticePosition.value / lastPracticeTotal.value * 100)
+  : 0)
+function continuePractice() {
+  if (!canResume.value || !props.lastPractice) {
+    const first = practiceCategories.value[0]
+    if (first) void router.push(`/practice/${first.id}`)
+    return
+  }
+  void router.push({
+    path: `/practice/${props.lastPractice.categoryId}`,
+    query: { questionId: String(props.lastPractice.questionId) },
+  })
+}
+const practiceCategories = computed(() => {
+  const result: { id: number }[] = []
+  const visit = (category: LocalBank['categories'][number]) => {
+    if (category.questionIds.length > 0) result.push({ id: category.id })
+    props.bank?.categories.filter(child => child.parentId === category.id).forEach(visit)
+  }
+  props.bank?.manifest.questionBank.rootCategoryIds
+    .map(id => props.bank?.categories.find(category => category.id === id))
+    .filter((category): category is LocalBank['categories'][number] => !!category)
+    .forEach(visit)
+  return result
+})
 
 </script>
 
@@ -100,20 +142,6 @@ const statsData = computed(() => [
         <n-empty v-if="!masteryTotal" description="当前题库为空，或未选择任何题库" />
         <div v-else-if="bank" class="mastery-overview" :style="{ '--heatmap-width': heatmapWidth ? `${heatmapWidth}px` : 'max-content' }">
           <div class="mastery-left">
-            <div class="rings-panel">
-              <n-progress type="circle" :percentage="masteryRate" class="mastery-ring">
-                <div class="ring-label">
-                  <strong>{{ masteryRate }}%</strong>
-                  <n-text depth="3">已掌握</n-text>
-                </div>
-              </n-progress>
-              <div class="ring-legend">
-                <div v-for="item in rootProgress" :key="item.id" class="legend-row">
-                  <n-text class="legend-name" :title="item.name">{{ item.name }}</n-text>
-                  <n-text depth="3" class="legend-count">{{ item.mastered }} / {{ item.total }}</n-text>
-                </div>
-              </div>
-            </div>
             <div class="stats-grid">
               <div v-for="item in statsData" :key="item.label" class="stat-item">
                 <n-icon :size="22" :color="item.color" class="stat-icon">
@@ -124,6 +152,79 @@ const statsData = computed(() => [
                   <n-text strong class="stat-value"><n-number-animation :from="0" :to="item.value" /></n-text>
                 </div>
               </div>
+            </div>
+            <div class="progress-panels">
+              <section class="mastery-progress-panel">
+                <n-flex align="center" :size="6" class="progress-panel-title">
+                  <n-icon size="18"><Target24Regular /></n-icon>
+                  <n-text strong>掌握进度</n-text>
+                </n-flex>
+                <div class="rings-panel">
+                  <n-progress type="circle" :percentage="masteryRate" class="mastery-ring">
+                    <div class="ring-label">
+                      <strong>{{ masteryRate }}%</strong>
+                      <n-text depth="3">已掌握</n-text>
+                    </div>
+                  </n-progress>
+                  <div class="ring-legend">
+                    <div v-for="item in rootProgress" :key="item.id" class="legend-row">
+                      <n-text class="legend-name" :title="item.name">{{ item.name }}</n-text>
+                      <n-text depth="3" class="legend-count">{{ item.mastered }} / {{ item.total }}</n-text>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="resume-panel">
+                <n-flex align="center" :size="6" class="progress-panel-title">
+                  <n-icon size="18"><History24Regular /></n-icon>
+                  <n-text strong>继续上次练习</n-text>
+                </n-flex>
+                <template v-if="canResume && lastPractice">
+                  <div class="resume-details">
+                    <n-text strong class="resume-category">{{ lastPracticeCategory?.name }}</n-text>
+                    <n-flex align="center" justify="space-between" :size="8" :wrap="false" class="resume-meta">
+                      <n-tag type="primary" size="small" :bordered="false">
+                        第 {{ lastPractice.questionNumber }} 题
+                      </n-tag>
+                      <n-text depth="3" class="resume-time">{{ lastPracticeTime }}</n-text>
+                    </n-flex>
+                    <div class="resume-progress">
+                      <n-flex justify="space-between" align="center" :wrap="false">
+                        <n-text depth="3" class="resume-progress-label">浏览位置</n-text>
+                        <n-text depth="3" class="resume-progress-label">
+                          {{ lastPracticePosition }} / {{ lastPracticeTotal }}
+                        </n-text>
+                      </n-flex>
+                      <n-progress
+                        type="line"
+                        :percentage="lastPracticeRate"
+                        :height="6"
+                        :show-indicator="false"
+                        :border-radius="3"
+                      />
+                    </div>
+                  </div>
+                  <n-button type="primary" size="small" class="resume-button" @click="continuePractice">
+                    继续练习
+                    <template #icon><n-icon><ArrowRight24Regular /></n-icon></template>
+                  </n-button>
+                </template>
+                <template v-else>
+                  <n-text depth="3" class="resume-empty">还没有练习记录</n-text>
+                  <n-button
+                    type="primary"
+                    size="small"
+                    secondary
+                    class="resume-button"
+                    :disabled="!practiceCategories.length"
+                    @click="continuePractice"
+                  >
+                    开始练习
+                    <template #icon><n-icon><ArrowRight24Regular /></n-icon></template>
+                  </n-button>
+                </template>
+              </section>
             </div>
             <MasteryHeatmap
               :dates="masteryDates"
@@ -183,6 +284,81 @@ const statsData = computed(() => [
   min-width: 0;
 }
 
+.progress-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(180px, 2fr);
+  min-width: 0;
+}
+
+.mastery-progress-panel,
+.resume-panel {
+  min-width: 0;
+}
+
+.mastery-progress-panel {
+  padding-right: 24px;
+}
+
+.resume-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 24px;
+  border-left: 1px solid var(--n-border-color);
+  text-align: left;
+}
+
+.progress-panel-title {
+  margin-bottom: 16px;
+}
+
+.resume-category {
+  display: block;
+  width: 100%;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.resume-details {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: var(--n-border-radius);
+  background-color: color-mix(in srgb, var(--n-primary-color) 8%, transparent);
+}
+
+.resume-meta {
+  margin-top: 10px;
+}
+
+.resume-time {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.resume-progress {
+  margin-top: 12px;
+}
+
+.resume-progress-label {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.resume-progress :deep(.n-progress) {
+  margin-top: 8px;
+}
+
+.resume-empty {
+  margin-top: 10px;
+}
+
+.resume-button {
+  margin-top: 12px;
+  margin-right: 12px;
+  align-self: flex-end;
+}
+
 .mastery-ring {
   width: 142px;
   flex: 0 0 142px;
@@ -240,8 +416,8 @@ const statsData = computed(() => [
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px 8px;
-  padding-top: 20px;
-  border-top: 1px solid var(--n-border-color);
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--n-border-color);
 }
 
 .stat-item {
@@ -325,6 +501,26 @@ const statsData = computed(() => [
 }
 
 @media (width < 768px) {
+  .progress-panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mastery-progress-panel {
+    padding-right: 0;
+    padding-bottom: 20px;
+  }
+
+  .resume-panel {
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: 0;
+    border-top: 1px solid var(--n-border-color);
+  }
+
+  .resume-button {
+    margin-top: 16px;
+  }
+
   .mastery-summary {
     contain: none;
     padding-left: 0;

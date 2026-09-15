@@ -8,6 +8,7 @@ import upAvatar from '../../assets/chengxiaoyu-avatar.jpg'
 import qrCode from '../../assets/qrcode.jpg'
 import MasteryOverview from '../../components/Home/MasteryOverview.vue'
 import { readBank, readStates, type LocalBank } from '../../utils/questionBank'
+import { readLastPracticeProgress, type LastPracticeProgress } from '../../utils/practiceProgress'
 
 const categoryStore = useCategoryStore()
 const liveAnnouncements: Notification[] = []
@@ -16,6 +17,7 @@ const selectedAnno = ref<Notification | null>(null)
 const showModal = ref(false)
 const bank = shallowRef<LocalBank | null>(null)
 const states = shallowRef<Record<number, UserQuestionState>>({})
+const lastPractice = shallowRef<LastPracticeProgress | null>(null)
 const loading = ref(true)
 const loadError = ref('')
 
@@ -35,6 +37,9 @@ async function loadHome() {
       : {}
     bank.value = nextBank
     states.value = nextStates
+    lastPractice.value = nextBank
+      ? await readLastPracticeProgress(nextBank.manifest.questionBank.id)
+      : null
   } catch (cause) {
     loadError.value = cause instanceof Error ? cause.message : '首页数据加载失败'
   } finally {
@@ -62,7 +67,7 @@ onMounted(loadHome)
         vertical
         size="large"
       >
-        <MasteryOverview :bank="bank" :states="states" />
+        <MasteryOverview :bank="bank" :states="states" :last-practice="lastPractice" />
 
     <!-- 移动端布局 -->
     <template v-if="isMobile">

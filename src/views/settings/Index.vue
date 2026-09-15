@@ -4,7 +4,8 @@ import { useMessage, useThemeVars } from 'naive-ui'
 import type { UploadFileInfo } from 'naive-ui'
 import { useSettingsStore } from '../../store/settings'
 import { useThemeStore } from '../../store/theme'
-import { Image24Regular, DarkTheme24Regular } from '@vicons/fluent'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
+import DarkTheme24Regular from '@vicons/fluent/es/DarkTheme24Regular'
 import SettingCard from '../../components/Interaction/SettingCard.vue'
 import DataManagement from '../../components/Interaction/DataManagement.vue'
 import GitHubSyncSettings from '../../components/Interaction/GitHubSyncSettings.vue'
@@ -131,7 +132,7 @@ async function selectImage({ file }: { file: UploadFileInfo }) {
 
 <style scoped>
 .settings-card { height: 100%; overflow: hidden; }
-.settings-card :deep(.settings-card-content) { box-sizing: border-box; height: 100%; min-height: 0; padding: 16px 20px 20px; overflow: hidden; }
+.settings-card :deep(.settings-card-content) { box-sizing: border-box; height: 100%; min-height: 0; padding: 16px 20px 0; overflow: hidden; }
 .settings-tabs { height: 100%; min-height: 0; text-align: left; }
 .settings-tabs :deep(.n-tabs-nav) { flex: 0 0 auto; }
 .settings-tabs :deep(.n-tabs-pane-wrapper) { flex: 1; min-height: 0; }
@@ -146,9 +147,8 @@ async function selectImage({ file }: { file: UploadFileInfo }) {
 .background-preview :deep(.n-image) { width: 100%; height: 100%; }
 .background-preview :deep(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
 @media (width < 768px) {
-  .settings-card :deep(.settings-card-content) { padding: 12px 16px 16px; }
+  .settings-card :deep(.settings-card-content) { padding: 12px 16px 0; }
   .settings-pane-content { padding-top: 6px; }
   .settings-list :deep(.setting-item:first-child) { padding-top: 6px; }
 }
 </style>
-

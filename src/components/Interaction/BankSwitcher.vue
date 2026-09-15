@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch } from 'vue'
-import { Add24Regular, Delete24Regular, Library24Regular } from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Library24Regular from '@vicons/fluent/es/Library24Regular'
 import { useCategoryStore } from '../../store/category'
 import { useDialog } from 'naive-ui'
 import { createLocalBank, deleteBank, listBanks, selectBank } from '../../utils/questionBank'
@@ -120,6 +122,7 @@ function importBank() {
               <div class="bank-info">
                 <n-text strong>{{ bank.name }}</n-text>
                 <n-text depth="3" style="font-size: 12px">{{ bank.questionCount }} 道题目 · {{ new Date(bank.syncTime).toLocaleDateString('zh-CN') }}</n-text>
+                <n-text depth="3" class="bank-id">ID：{{ bank.id }}</n-text>
               </div>
               <n-tag v-if="bank.id === current" type="primary" size="small">当前</n-tag>
               <n-button v-else quaternary circle size="small" type="error" aria-label="删除题库" title="删除题库" @click.stop="remove(bank)">
@@ -152,5 +155,6 @@ function importBank() {
 .bank-option { display: flex; align-items: center; gap: 12px; padding: 14px 0; cursor: pointer; text-align: left; }
 .bank-option + .bank-option { border-top: 1px solid var(--n-border-color); }
 .bank-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.bank-id { font-size: 12px; overflow-wrap: anywhere; }
 .bank-option :deep(.n-button) { flex-shrink: 0; }
 </style>

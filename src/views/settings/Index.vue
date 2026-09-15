@@ -7,6 +7,7 @@ import { useThemeStore } from '../../store/theme'
 import { Image24Regular, DarkTheme24Regular } from '@vicons/fluent'
 import SettingCard from '../../components/Interaction/SettingCard.vue'
 import DataManagement from '../../components/Interaction/DataManagement.vue'
+import GitHubSyncSettings from '../../components/Interaction/GitHubSyncSettings.vue'
 
 const settings = useSettingsStore()
 const theme = useThemeStore()
@@ -113,6 +114,14 @@ async function selectImage({ file }: { file: UploadFileInfo }) {
         <n-scrollbar class="settings-scrollbar">
           <div class="settings-pane-content">
             <DataManagement />
+          </div>
+        </n-scrollbar>
+      </n-tab-pane>
+      <n-tab-pane name="cloud" tab="云同步">
+        <n-scrollbar class="settings-scrollbar">
+          <div class="settings-pane-content">
+            <GitHubSyncSettings v-if="settings.ready" />
+            <n-skeleton v-else text :repeat="3" />
           </div>
         </n-scrollbar>
       </n-tab-pane>

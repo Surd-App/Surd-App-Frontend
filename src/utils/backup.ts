@@ -1,6 +1,7 @@
 import { openDatabase } from './database';
 
 const stores = ['states', 'settings'] as const;
+const excludedSettingKeys = new Set(['githubSync', 'githubSyncKey', 'githubSyncMeta']);
 type StoreName = typeof stores[number];
 type Entry = { key: string; value: any };
 export interface LocalBackup {
@@ -28,7 +29,10 @@ export async function exportBackup(): Promise<LocalBackup> {
       request.onsuccess = () => {
         const cursor = request.result;
         if (!cursor) return;
-        result[name].push({ key: String(cursor.key), value: cursor.value });
+        const key = String(cursor.key);
+        if (name !== 'settings' || !excludedSettingKeys.has(key)) {
+          result[name].push({ key, value: cursor.value });
+        }
         cursor.continue();
       };
     }
@@ -103,6 +107,20 @@ export function parseBackup(text: string): LocalBackup {
 
 export async function restoreBackup(backup: LocalBackup) {
   const db = await openDatabase();
+  const protectedSettings = await new Promise<Entry[]>((resolve, reject) => {
+    const tx = db.transaction('settings');
+    const store = tx.objectStore('settings');
+    const entries: Entry[] = [];
+    for (const key of excludedSettingKeys) {
+      const request = store.get(key);
+      request.onsuccess = () => {
+        if (request.result !== undefined) entries.push({ key, value: request.result });
+      };
+    }
+    tx.oncomplete = () => resolve(entries);
+    tx.onabort = () => reject(tx.error ?? new Error('云同步设置读取失败'));
+    tx.onerror = () => reject(tx.error);
+  });
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction([...stores], 'readwrite');
     tx.oncomplete = () => resolve();
@@ -113,6 +131,9 @@ export async function restoreBackup(backup: LocalBackup) {
         const store = tx.objectStore(name);
         store.clear();
         for (const entry of backup.stores[name]) store.put(entry.value, entry.key);
+        if (name === 'settings') {
+          for (const entry of protectedSettings) store.put(entry.value, entry.key);
+        }
       }
     } catch (error) { tx.abort(); reject(error); }
   });

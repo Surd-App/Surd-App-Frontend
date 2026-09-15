@@ -2,12 +2,15 @@ import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import { defaultPersonalization, readPersonalization, savePersonalization } from '../utils/settings';
 import type { PersonalizationSettings } from '../utils/settings';
+import { defaultGitHubSyncSettings, disableGitHubSync, readGitHubSyncSettings, saveGitHubSyncSettings } from '../utils/githubSync';
+import type { GitHubSyncSettings } from '../utils/githubSync';
 
 export const useSettingsStore = defineStore('settings', () => {
   const personalization = shallowRef(defaultPersonalization());
   const imageUrl = ref('');
   const ready = ref(false);
   const saving = ref(false);
+  const githubSync = shallowRef<GitHubSyncSettings>(defaultGitHubSyncSettings());
   let initialization: Promise<void> | undefined;
   const backgroundUrl = computed(() => {
     const type = personalization.value.background.type;
@@ -23,8 +26,9 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function initialize() {
-    return initialization ??= readPersonalization().then(settings => {
+    return initialization ??= Promise.all([readPersonalization(), readGitHubSyncSettings()]).then(([settings, cloudSync]) => {
       apply(settings);
+      githubSync.value = cloudSync;
       ready.value = true;
     }).catch(error => {
       initialization = undefined;
@@ -53,5 +57,13 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  return { personalization, imageUrl, backgroundUrl, ready, saving, initialize, setBackground };
+  async function enableGitHubSync(token: string, account: string, repository: string) {
+    githubSync.value = await saveGitHubSyncSettings(token, account, repository);
+  }
+
+  async function turnOffGitHubSync() {
+    githubSync.value = await disableGitHubSync();
+  }
+
+  return { personalization, imageUrl, backgroundUrl, ready, saving, githubSync, initialize, setBackground, enableGitHubSync, turnOffGitHubSync };
 });
